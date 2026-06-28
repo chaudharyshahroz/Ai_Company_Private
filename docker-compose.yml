@@ -1,0 +1,101 @@
+# docker-compose.yml — all-in-one stack for a single VPS.
+#
+# Use this when you want the app + Postgres on the same Hostinger VPS
+# (simplest setup). For production with a managed Postgres (Neon,
+# Supabase, RDS, etc.), delete the `db` service and point
+# DATABASE_URL at your managed DB instead.
+#
+# Dokploy will pick this up automatically if you point it at this repo.
+
+services:
+  app:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    image: reklu:latest
+    container_name: reklu-app
+    restart: unless-stopped
+    ports:
+      - "3000:3000"
+    environment:
+      # ─── App ──────────────────────────────────────────────
+      NODE_ENV: production
+      PORT: 3000
+      HOSTNAME: 0.0.0.0
+      NEXT_PUBLIC_APP_URL: ${NEXT_PUBLIC_APP_URL:-http://localhost:3000}
+
+      # ─── Auth (Clerk) ─────────────────────────────────────
+      NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY: ${NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY}
+      CLERK_SECRET_KEY: ${CLERK_SECRET_KEY}
+      CLERK_WEBHOOK_SECRET: ${CLERK_WEBHOOK_SECRET}
+
+      # ─── Database ─────────────────────────────────────────
+      # When using the bundled `db` service below, this points
+      # at the internal docker network hostname.
+      DATABASE_URL: ${DATABASE_URL}
+
+      # ─── AI (OpenRouter) ──────────────────────────────────
+      OPENROUTER_API_KEY: ${OPENROUTER_API_KEY}
+
+      # ─── Payments (Paddle) ────────────────────────────────
+      PADDLE_API_KEY: ${PADDLE_API_KEY}
+      PADDLE_WEBHOOK_SECRET: ${PADDLE_WEBHOOK_SECRET}
+      NEXT_PUBLIC_PADDLE_CLIENT_TOKEN: ${NEXT_PUBLIC_PADDLE_CLIENT_TOKEN}
+      NEXT_PUBLIC_PADDLE_ENVIRONMENT: ${NEXT_PUBLIC_PADDLE_ENVIRONMENT:-sandbox}
+
+      # ─── Email (Resend) ───────────────────────────────────
+      RESEND_API_KEY: ${RESEND_API_KEY}
+      EMAIL_FROM: ${EMAIL_FROM:-hello@reklu.app}
+
+      # ─── Storage (Cloudflare R2) ──────────────────────────
+      CLOUDFLARE_R2_ACCESS_KEY: ${CLOUDFLARE_R2_ACCESS_KEY}
+      CLOUDFLARE_R2_SECRET_KEY: ${CLOUDFLARE_R2_SECRET_KEY}
+      CLOUDFLARE_R2_BUCKET: ${CLOUDFLARE_R2_BUCKET}
+      CLOUDFLARE_R2_ENDPOINT: ${CLOUDFLARE_R2_ENDPOINT}
+      CLOUDFLARE_R2_PUBLIC_URL: ${CLOUDFLARE_R2_PUBLIC_URL}
+
+      # ─── Background jobs (Inngest) ───────────────────────
+      INNGEST_EVENT_KEY: ${INNGEST_EVENT_KEY}
+      INNGEST_SIGNING_KEY: ${INNGEST_SIGNING_KEY}
+
+      # ─── Misc ─────────────────────────────────────────────
+      ADMIN_USER_IDS: ${ADMIN_USER_IDS:-}
+    depends_on:
+      db:
+        condition: service_healthy
+    healthcheck:
+      test: ["CMD", "wget", "--no-verbose", "--tries=1", "--spider", "http://localhost:3000/api/health"]
+      interval: 30s
+      timeout: 5s
+      retries: 3
+      start_period: 30s
+    networks:
+      - reklu-net
+
+  db:
+    image: postgres:16-alpine
+    container_name: reklu-db
+    restart: unless-stopped
+    environment:
+      POSTGRES_USER: ${POSTGRES_USER:-reklu}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-reklu}
+      POSTGRES_DB: ${POSTGRES_DB:-reklu}
+    volumes:
+      - reklu-pgdata:/var/lib/postgresql/data
+    ports:
+      # 5432 exposed for ad-hoc psql access; remove if you don't need it.
+      - "5432:5432"
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ${POSTGRES_USER:-reklu}"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    networks:
+      - reklu-net
+
+volumes:
+  reklu-pgdata:
+
+networks:
+  reklu-net:
+    driver: bridge

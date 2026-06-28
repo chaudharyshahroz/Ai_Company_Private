@@ -1,0 +1,55 @@
+name: CI
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+    branches: [main]
+
+jobs:
+  verify:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Set up Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: "20"
+          cache: "npm"
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Generate build-time placeholders
+        run: |
+          # Build-time env stubs so `next build` doesn't crash on missing vars.
+          # Real values are injected at runtime by Dokploy.
+          cat > .env.production <<'EOF'
+          NEXT_PUBLIC_APP_URL=http://localhost:3000
+          NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY=pk_test_placeholder
+          CLERK_SECRET_KEY=sk_test_placeholder
+          NEXT_PUBLIC_PADDLE_ENVIRONMENT=sandbox
+          NEXT_PUBLIC_PADDLE_CLIENT_TOKEN=placeholder
+          DATABASE_URL=postgres://placeholder:placeholder@localhost:5432/placeholder
+          EOF
+
+      - name: Lint
+        run: npm run lint
+
+      - name: Typecheck
+        run: npm run typecheck
+
+      - name: Build
+        run: npm run build
+
+      - name: Upload build artifacts (optional)
+        if: success()
+        uses: actions/upload-artifact@v4
+        with:
+          name: next-standalone
+          path: .next/standalone
+          if-no-files-found: ignore
+          retention-days: 3

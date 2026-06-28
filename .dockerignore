@@ -1,0 +1,38 @@
+**/node_modules
+**/npm-debug.log
+**/.next
+**/.turbo
+**/.git
+**/.DS_Store
+**/.vscode
+**/.idea
+
+# Build output we don't want inside the image
+.next
+out
+build
+dist
+
+# Local env files — Dokploy injects these at runtime
+.env
+.env.local
+.env.*.local
+
+# Test / coverage / docs
+coverage
+**/*.test.ts
+**/*.test.tsx
+**/*.spec.ts
+**/*.spec.tsx
+README.md
+**/README.md
+
+# Local screenshots and large assets
+screenshots/
+*.png
+!public/**/*.png
+
+# Git history
+.git
+.gitignore
+.github
