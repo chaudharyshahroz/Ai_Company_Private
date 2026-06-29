@@ -11,6 +11,14 @@ import {
   ListChecks,
   Plus,
   Users,
+  Gauge,
+  Target,
+  Rocket,
+  Lightbulb,
+  AlertTriangle,
+  ChevronRight,
+  Dna,
+  Package,
 } from "lucide-react";
 import { Panel } from "@/components/ui/Panel";
 import { Button } from "@/components/ui/Button";
@@ -24,6 +32,9 @@ import {
   getTodaysBriefing,
   listWorkInbox,
   listEnrichedHiredAgents,
+  getBusinessDna,
+  getBusinessScore,
+  listWeeklyTasks,
 } from "@/lib/data";
 import { cn } from "@/lib/utils";
 
@@ -61,6 +72,9 @@ export default async function HomePage() {
   const user = await getCurrentUser();
   const workInbox = await listWorkInbox(user.id);
   const agents = await listEnrichedHiredAgents(user.id);
+  const dna = await getBusinessDna(user.id);
+  const score = await getBusinessScore(user.id);
+  const weeklyTasks = await listWeeklyTasks(user.id);
 
   // Surface the top 5 most important hired agents (or fewer if not hired)
   const priorityIds = [
@@ -99,15 +113,252 @@ export default async function HomePage() {
               {greeting}
             </p>
             <h1 className="page-title">
-              Welcome back. Your AI team worked while you were away.
+              Welcome back. Your AI company is growing your business.
             </h1>
             <p className="mt-3 max-w-2xl text-[15px] leading-relaxed text-secondary">
-              Review completed work, approve important tasks, and assign your AI employees what to do next.
+              Your AI CEO coordinated <strong className="font-semibold text-text">18 tasks</strong> today.
+              Research analyzed <strong className="font-semibold text-text">5 competitors</strong>,{" "}
+              Marketing drafted <strong className="font-semibold text-text">7 posts</strong>, Sales
+              prepared <strong className="font-semibold text-text">24 lead messages</strong>, and the
+              AI CEO found <strong className="font-semibold text-accent">3 new growth opportunities</strong>.
             </p>
 
             <div className="mt-7 flex flex-wrap items-center gap-2.5">
               <HomeActions />
             </div>
+          </section>
+
+          {/* ── Section 1b: Next Best Action (always-on hero widget) ── */}
+          {weeklyTasks[0] && (
+            <section className="mb-10">
+              <Link
+                href={weeklyTasks[0].oneClickAction || "/weekly-tasks"}
+                className="block transition-opacity hover:opacity-95"
+              >
+                <Panel className="relative overflow-hidden p-7">
+                  <div
+                    className="absolute inset-0 opacity-[0.04]"
+                    style={{
+                      backgroundImage:
+                        "radial-gradient(circle at 0% 0%, rgba(94,106,210,1) 0%, transparent 60%)",
+                    }}
+                  />
+                  <div className="relative flex items-start justify-between gap-6">
+                    <div className="flex items-start gap-5">
+                      <div className="flex h-12 w-12 shrink-0 items-center justify-center rounded-md border border-accent/30 bg-accent/10">
+                        <Sparkles size={20} className="text-accent" />
+                      </div>
+                      <div>
+                        <div className="mb-1 flex items-center gap-2 text-[10.5px] font-semibold uppercase tracking-[0.08em] text-accent">
+                          Next Best Action · from your AI CEO
+                        </div>
+                        <h2 className="text-[20px] font-semibold leading-tight text-text">
+                          {weeklyTasks[0].task}
+                        </h2>
+                        <p className="mt-2 max-w-2xl text-[13.5px] leading-relaxed text-secondary">
+                          <span className="font-medium text-text">Why:</span>{" "}
+                          {weeklyTasks[0].reason}
+                          <span className="mx-2 text-border">·</span>
+                          <span className="font-medium text-text">Expected:</span>{" "}
+                          {weeklyTasks[0].expectedResult}
+                        </p>
+                        <div className="mt-4 flex items-center gap-3 text-[12px] text-muted-text">
+                          <span className="rounded-full border border-border bg-surface-2 px-2 py-0.5 uppercase tracking-wider">
+                            {weeklyTasks[0].assignedDepartment}
+                          </span>
+                          {weeklyTasks[0].dueDate && (
+                            <span>
+                              Due{" "}
+                              {new Date(weeklyTasks[0].dueDate).toLocaleDateString("en-US", {
+                                month: "short",
+                                day: "numeric",
+                              })}
+                            </span>
+                          )}
+                        </div>
+                      </div>
+                    </div>
+                    <Button size="md" className="shrink-0">
+                      Generate Output
+                      <ArrowRight size={13} />
+                    </Button>
+                  </div>
+                </Panel>
+              </Link>
+            </section>
+          )}
+
+          {/* ── Section 1c: Top-level growth widgets (4 across) ──────── */}
+          <section className="mb-10 grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
+            <Link href="/business-score" className="block">
+              <Panel hoverable className="p-5">
+                <div className="flex items-start justify-between">
+                  <div className="flex items-center gap-2 text-[11px] font-medium uppercase tracking-wider text-muted-text">
+                    <Gauge size={12} className="text-accent" />
+                    Business Score
+                  </div>
+                  <ChevronRight size={14} className="text-muted-text" />
+                </div>
+                <div className="mt-3 flex items-baseline gap-2">
+                  <span className="font-mono text-[36px] font-semibold leading-none tabular-nums text-text">
+                    {score.overall}
+                  </span>
+                  <span className="text-[13px] text-muted-text">/ 100</span>
+                </div>
+                <div className="mt-2 flex items-center gap-1.5 text-[12px] text-success">
+                  <TrendingUp size={11} />
+                  +{score.overall - 62} since first score
+                </div>
+              </Panel>
+            </Link>
+
+            <Link href="/business-dna" className="block">
+              <Panel hoverable className="p-5">
+                <div className="flex items-start justify-between">
+                  <div className="flex items-center gap-2 text-[11px] font-medium uppercase tracking-wider text-muted-text">
+                    <Dna size={12} className="text-accent" />
+                    Business Stage
+                  </div>
+                  <ChevronRight size={14} className="text-muted-text" />
+                </div>
+                <div className="mt-3 text-[28px] font-semibold leading-none capitalize text-text">
+                  {dna.stage}
+                </div>
+                <div className="mt-2 truncate text-[12px] text-secondary">
+                  {dna.businessName}
+                </div>
+              </Panel>
+            </Link>
+
+            <Link href="/leads" className="block">
+              <Panel hoverable className="p-5">
+                <div className="flex items-start justify-between">
+                  <div className="flex items-center gap-2 text-[11px] font-medium uppercase tracking-wider text-muted-text">
+                    <Users size={12} className="text-accent" />
+                    Leads Captured
+                  </div>
+                  <ChevronRight size={14} className="text-muted-text" />
+                </div>
+                <div className="mt-3 font-mono text-[36px] font-semibold leading-none tabular-nums text-text">
+                  24
+                </div>
+                <div className="mt-2 flex items-center gap-1.5 text-[12px] text-success">
+                  <TrendingUp size={11} />
+                  +8 this week
+                </div>
+              </Panel>
+            </Link>
+
+            <Link href="/campaigns" className="block">
+              <Panel hoverable className="p-5">
+                <div className="flex items-start justify-between">
+                  <div className="flex items-center gap-2 text-[11px] font-medium uppercase tracking-wider text-muted-text">
+                    <Megaphone size={12} className="text-accent" />
+                    Campaigns Ready
+                  </div>
+                  <ChevronRight size={14} className="text-muted-text" />
+                </div>
+                <div className="mt-3 font-mono text-[36px] font-semibold leading-none tabular-nums text-text">
+                  7
+                </div>
+                <div className="mt-2 text-[12px] text-secondary">
+                  3 awaiting approval
+                </div>
+              </Panel>
+            </Link>
+          </section>
+
+          {/* ── Section 1d: Opportunities & Risks row ───────────────── */}
+          <section className="mb-10 grid gap-4 md:grid-cols-2">
+            <Panel className="p-6">
+              <div className="mb-4 flex items-center justify-between">
+                <div className="flex items-center gap-2">
+                  <Lightbulb size={14} className="text-success" />
+                  <h2 className="text-[13px] font-semibold uppercase tracking-wider text-text">
+                    Opportunities Found
+                  </h2>
+                </div>
+                <span className="rounded-full border border-success/30 bg-success/10 px-2 py-0.5 text-[10px] font-medium uppercase tracking-wider text-success">
+                  3
+                </span>
+              </div>
+              <ul className="space-y-3">
+                <li className="flex items-start gap-3 border-l-2 border-success/40 pl-3">
+                  <div>
+                    <div className="text-[13px] font-medium text-text">
+                      New niche: AI appointment automation for dental clinics
+                    </div>
+                    <div className="mt-0.5 text-[12px] text-muted-text">
+                      Research Department · 2 hours ago
+                    </div>
+                  </div>
+                </li>
+                <li className="flex items-start gap-3 border-l-2 border-success/40 pl-3">
+                  <div>
+                    <div className="text-[13px] font-medium text-text">
+                      Local SEO gap: 12 keywords competitors aren't bidding on
+                    </div>
+                    <div className="mt-0.5 text-[12px] text-muted-text">
+                      Marketing Department · Yesterday
+                    </div>
+                  </div>
+                </li>
+                <li className="flex items-start gap-3 border-l-2 border-success/40 pl-3">
+                  <div>
+                    <div className="text-[13px] font-medium text-text">
+                      Untapped channel: WhatsApp CTA on landing page
+                    </div>
+                    <div className="mt-0.5 text-[12px] text-muted-text">
+                      Product & Website · 3 days ago
+                    </div>
+                  </div>
+                </li>
+              </ul>
+            </Panel>
+
+            <Panel className="p-6">
+              <div className="mb-4 flex items-center justify-between">
+                <div className="flex items-center gap-2">
+                  <AlertTriangle size={14} className="text-warning" />
+                  <h2 className="text-[13px] font-semibold uppercase tracking-wider text-text">
+                    Risks Detected
+                  </h2>
+                </div>
+                <span className="rounded-full border border-warning/30 bg-warning/10 px-2 py-0.5 text-[10px] font-medium uppercase tracking-wider text-warning">
+                  1
+                </span>
+              </div>
+              <ul className="space-y-3">
+                <li className="flex items-start gap-3 border-l-2 border-warning/40 pl-3">
+                  <div>
+                    <div className="text-[13px] font-medium text-text">
+                      Offer landing page conversion rate dropped 12% this week
+                    </div>
+                    <div className="mt-0.5 text-[12px] text-muted-text">
+                      AI CEO · Today
+                    </div>
+                    <Link
+                      href="/website"
+                      className="mt-1 inline-flex items-center gap-1 text-[12px] font-medium text-accent hover:underline"
+                    >
+                      Fix with Product & Website
+                      <ArrowRight size={11} />
+                    </Link>
+                  </div>
+                </li>
+              </ul>
+              <div className="mt-5 border-t border-border pt-4">
+                <div className="text-[11px] font-medium uppercase tracking-wider text-muted-text">
+                  Time Saved This Month
+                </div>
+                <div className="mt-1 flex items-baseline gap-2">
+                  <span className="font-mono text-[24px] font-semibold tabular-nums text-text">
+                    47h
+                  </span>
+                  <span className="text-[12px] text-muted-text">across all AI employees</span>
+                </div>
+              </div>
+            </Panel>
           </section>
 
           {/* ── Section 2: Today's AI Team Summary ──────────────────── */}

@@ -418,6 +418,294 @@ export const delegationsRelations = relations(delegations, ({ one }) => ({
 //  Inferred types  (use these in your app code)
 // ─────────────────────────────────────────────────────────────
 
+// ─────────────────────────────────────────────────────────────
+//  Business DNA  (the foundation of every AI output)
+//  One per user. Stored structured so prompts can reference it.
+// ─────────────────────────────────────────────────────────────
+
+export const businessStageEnum = pgEnum("business_stage", [
+  "idea",
+  "validating",
+  "launching",
+  "growing",
+  "scaling",
+]);
+
+export const businessDna = pgTable(
+  "business_dna",
+  {
+    id: uuid("id").primaryKey().defaultRandom(),
+    userId: uuid("user_id")
+      .notNull()
+      .unique()
+      .references(() => users.id, { onDelete: "cascade" }),
+
+    // Source mode (how this DNA was created)
+    sourceMode: text("source_mode").notNull().default("start_new"), // start_new | grow_existing | hire_ai_company
+
+    // Overview
+    businessName: text("business_name"),
+    tagline: text("tagline"),
+    businessIdea: text("business_idea"),
+    industry: text("industry"),
+    businessType: text("business_type"), // online | physical | hybrid
+    country: text("country"),
+    city: text("city"),
+    market: text("market"), // local | regional | national | global
+    stage: businessStageEnum("stage").notNull().default("idea"),
+
+    // Customer
+    targetCustomer: text("target_customer"),
+    customerPainPoints: jsonb("customer_pain_points")
+      .$type<string[]>()
+      .notNull()
+      .default(sql`'[]'::jsonb`),
+    customerDemographics: text("customer_demographics"),
+
+    // Offer
+    mainOffer: text("main_offer"),
+    priceRange: text("price_range"), // e.g. "$500-$2000"
+    revenueTarget: text("revenue_target"),
+
+    // Brand
+    brandTone: text("brand_tone"), // bold | calm | playful | premium | friendly
+    brandVoiceNotes: text("brand_voice_notes"),
+
+    // Assets
+    websiteUrl: text("website_url"),
+    socialLinks: jsonb("social_links")
+      .$type<Record<string, string>>()
+      .notNull()
+      .default(sql`'{}'::jsonb`),
+
+    // Competitors
+    competitors: jsonb("competitors")
+      .$type<Array<{ name: string; url?: string; notes?: string }>>()
+      .notNull()
+      .default(sql`'[]'::jsonb`),
+
+    // Goals & problems
+    mainGoal: text("main_goal"),
+    currentProblems: jsonb("current_problems")
+      .$type<string[]>()
+      .notNull()
+      .default(sql`'[]'::jsonb`),
+    budget: text("budget"),
+    timeline: text("timeline"),
+    skillLevel: text("skill_level"), // beginner | intermediate | advanced
+    preferredChannels: jsonb("preferred_channels")
+      .$type<string[]>()
+      .notNull()
+      .default(sql`'[]'::jsonb`),
+
+    // AI-generated fields (populated by OpenRouter when user runs "Improve DNA")
+    aiSummary: text("ai_summary"),
+    aiRecommendedNiche: text("ai_recommended_niche"),
+    aiRecommendedPositioning: text("ai_recommended_positioning"),
+
+    createdAt: timestamp("created_at", { withTimezone: true, mode: "string" }).notNull().defaultNow(),
+    updatedAt: timestamp("updated_at", { withTimezone: true, mode: "string" }).notNull().defaultNow(),
+  },
+  (t) => ({
+    userIdx: uniqueIndex("business_dna_user_idx").on(t.userId),
+  }),
+);
+
+// ─────────────────────────────────────────────────────────────
+//  Business Score  (0-100 score across 7 dimensions)
+// ─────────────────────────────────────────────────────────────
+
+export const scoreVerdictEnum = pgEnum("score_verdict", [
+  "strong_opportunity",
+  "good_needs_positioning",
+  "difficult_market",
+  "too_generic",
+  "needs_niche_focus",
+]);
+
+export const businessScores = pgTable(
+  "business_scores",
+  {
+    id: uuid("id").primaryKey().defaultRandom(),
+    userId: uuid("user_id")
+      .notNull()
+      .references(() => users.id, { onDelete: "cascade" }),
+
+    // Sub-scores (0-100)
+    overall: integer("overall").notNull(),
+    demand: integer("demand").notNull(),
+    competition: integer("competition").notNull(), // higher = less competition
+    differentiation: integer("differentiation").notNull(),
+    profitPotential: integer("profit_potential").notNull(),
+    launchDifficulty: integer("launch_difficulty").notNull(), // higher = easier
+    growthPotential: integer("growth_potential").notNull(),
+    riskScore: integer("risk_score").notNull(), // higher = lower risk
+
+    verdict: scoreVerdictEnum("verdict").notNull(),
+    canIWinAnswer: text("can_i_win_answer").notNull(), // AI-generated honest assessment
+
+    breakdown: jsonb("breakdown")
+      .$type<Array<{ dimension: string; score: number; note: string }>>()
+      .notNull()
+      .default(sql`'[]'::jsonb`),
+
+    createdAt: timestamp("created_at", { withTimezone: true, mode: "string" }).notNull().defaultNow(),
+  },
+  (t) => ({
+    userIdx: index("business_scores_user_idx").on(t.userId),
+    userCreatedIdx: index("business_scores_user_created_idx").on(t.userId, t.createdAt),
+  }),
+);
+
+// ─────────────────────────────────────────────────────────────
+//  Offers  (generated by Offer Builder)
+// ─────────────────────────────────────────────────────────────
+
+export const offers = pgTable(
+  "offers",
+  {
+    id: uuid("id").primaryKey().defaultRandom(),
+    userId: uuid("user_id")
+      .notNull()
+      .references(() => users.id, { onDelete: "cascade" }),
+
+    offerName: text("offer_name").notNull(),
+    promise: text("promise"),
+    targetCustomer: text("target_customer"),
+
+    // Tiered packages
+    packages: jsonb("packages")
+      .$type<
+        Array<{
+          name: string; // Starter / Growth / Premium
+          price: string;
+          bestFor: string;
+          features: string[];
+          outcome: string;
+          cta: string;
+        }>
+      >()
+      .notNull()
+      .default(sql`'[]'::jsonb`),
+
+    salesPitch: text("sales_pitch"),
+    coldDmScript: text("cold_dm_script"),
+    whatsappPitch: text("whatsapp_pitch"),
+    emailPitch: text("email_pitch"),
+    landingHeadline: text("landing_headline"),
+    guarantee: text("guarantee"),
+    bonuses: jsonb("bonuses")
+      .$type<string[]>()
+      .notNull()
+      .default(sql`'[]'::jsonb`),
+
+    isActive: boolean("is_active").notNull().default(true),
+    createdAt: timestamp("created_at", { withTimezone: true, mode: "string" }).notNull().defaultNow(),
+  },
+  (t) => ({
+    userIdx: index("offers_user_idx").on(t.userId),
+  }),
+);
+
+// ─────────────────────────────────────────────────────────────
+//  Growth Roadmap  (7 / 30 / 90-day plans)
+// ─────────────────────────────────────────────────────────────
+
+export const roadmapKindEnum = pgEnum("roadmap_kind", ["launch_7", "growth_30", "scaling_90"]);
+
+export const growthRoadmaps = pgTable(
+  "growth_roadmaps",
+  {
+    id: uuid("id").primaryKey().defaultRandom(),
+    userId: uuid("user_id")
+      .notNull()
+      .references(() => users.id, { onDelete: "cascade" }),
+
+    kind: roadmapKindEnum("kind").notNull(),
+    title: text("title").notNull(),
+    summary: text("summary"),
+
+    items: jsonb("items")
+      .$type<
+        Array<{
+          day: number;
+          task: string;
+          objective: string;
+          whyItMatters: string;
+          department: string;
+          employee: string;
+          difficulty: "easy" | "medium" | "hard";
+          expectedResult: string;
+          status: "todo" | "in_progress" | "done";
+        }>
+      >()
+      .notNull()
+      .default(sql`'[]'::jsonb`),
+
+    createdAt: timestamp("created_at", { withTimezone: true, mode: "string" }).notNull().defaultNow(),
+  },
+  (t) => ({
+    userIdx: index("growth_roadmaps_user_idx").on(t.userId),
+    userKindIdx: index("growth_roadmaps_user_kind_idx").on(t.userId, t.kind),
+  }),
+);
+
+// ─────────────────────────────────────────────────────────────
+//  Weekly Tasks  (the AI CEO's "next best actions")
+// ─────────────────────────────────────────────────────────────
+
+export const weeklyTasks = pgTable(
+  "weekly_tasks",
+  {
+    id: uuid("id").primaryKey().defaultRandom(),
+    userId: uuid("user_id")
+      .notNull()
+      .references(() => users.id, { onDelete: "cascade" }),
+
+    weekStart: date("week_start").notNull(),
+    task: text("task").notNull(),
+    reason: text("reason").notNull(),
+    expectedResult: text("expected_result").notNull(),
+    assignedDepartment: text("assigned_department").notNull(),
+    dueDate: date("due_date"),
+    status: text("status").notNull().default("todo"), // todo | in_progress | done | skipped
+    oneClickAction: text("one_click_action"), // route to deep-link
+    createdAt: timestamp("created_at", { withTimezone: true, mode: "string" }).notNull().defaultNow(),
+  },
+  (t) => ({
+    userIdx: index("weekly_tasks_user_idx").on(t.userId),
+    userWeekIdx: index("weekly_tasks_user_week_idx").on(t.userId, t.weekStart),
+  }),
+);
+
+// ─────────────────────────────────────────────────────────────
+//  Relations — extend usersRelations to include new tables
+// ─────────────────────────────────────────────────────────────
+
+export const businessDnaRelations = relations(businessDna, ({ one }) => ({
+  user: one(users, { fields: [businessDna.userId], references: [users.id] }),
+}));
+
+export const businessScoresRelations = relations(businessScores, ({ one }) => ({
+  user: one(users, { fields: [businessScores.userId], references: [users.id] }),
+}));
+
+export const offersRelations = relations(offers, ({ one }) => ({
+  user: one(users, { fields: [offers.userId], references: [users.id] }),
+}));
+
+export const growthRoadmapsRelations = relations(growthRoadmaps, ({ one }) => ({
+  user: one(users, { fields: [growthRoadmaps.userId], references: [users.id] }),
+}));
+
+export const weeklyTasksRelations = relations(weeklyTasks, ({ one }) => ({
+  user: one(users, { fields: [weeklyTasks.userId], references: [users.id] }),
+}));
+
+// ─────────────────────────────────────────────────────────────
+//  Inferred types  (use these in your app code)
+// ─────────────────────────────────────────────────────────────
+
 export type User = typeof users.$inferSelect;
 export type NewUser = typeof users.$inferInsert;
 export type AgentTemplate = typeof agentTemplates.$inferSelect;
@@ -432,3 +720,13 @@ export type Delegation = typeof delegations.$inferSelect;
 export type BoardReport = typeof boardReports.$inferSelect;
 export type Notification = typeof notifications.$inferSelect;
 export type PlatformStat = typeof platformStats.$inferSelect;
+export type BusinessDna = typeof businessDna.$inferSelect;
+export type NewBusinessDna = typeof businessDna.$inferInsert;
+export type BusinessScore = typeof businessScores.$inferSelect;
+export type NewBusinessScore = typeof businessScores.$inferInsert;
+export type Offer = typeof offers.$inferSelect;
+export type NewOffer = typeof offers.$inferInsert;
+export type GrowthRoadmap = typeof growthRoadmaps.$inferSelect;
+export type NewGrowthRoadmap = typeof growthRoadmaps.$inferInsert;
+export type WeeklyTask = typeof weeklyTasks.$inferSelect;
+export type NewWeeklyTask = typeof weeklyTasks.$inferInsert;

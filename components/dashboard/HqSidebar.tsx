@@ -4,27 +4,42 @@ import * as React from "react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import {
+  // HQ
   Home,
-  Users,
+  Sparkles,
   Inbox,
   ListChecks,
   Target,
-  GraduationCap,
-  LineChart,
-  MessageSquare,
-  Megaphone,
-  Plug,
+  // Business Builder
+  Dna,
+  Gauge,
+  Search,
+  Swords,
+  Package,
   Globe,
-  CreditCard,
-  Settings,
+  Rocket,
+  // Growth
+  Megaphone,
+  TrendingUp,
+  Users,
+  CalendarCheck,
+  // Departments
   Briefcase,
   LifeBuoy,
-  Search,
+  LineChart,
   Wrench,
   Folder,
   Scale,
+  // Company
+  GraduationCap,
+  MessageSquare,
+  Plug,
   BarChart3,
-  Sparkles,
+  // System
+  CreditCard,
+  Settings,
+  Compass,
+  Building2,
 } from "lucide-react";
 import { Logo } from "@/components/ui/Logo";
 import { cn } from "@/lib/utils";
@@ -33,24 +48,44 @@ interface HqSidebarProps {
   collapsed?: boolean;
 }
 
-// All sidebar items are visible by default — every module is active.
-// The Advanced/Simple Mode toggle in Settings now controls display density
-// elsewhere (e.g. compact metrics on Reports), not whether items appear.
+// New IA — Business Growth OS + AI Company Team
+// Aligned with the new positioning: HQ / Business Builder / Growth / Departments / Company / System
 const groups: Array<{
   title?: string;
-  items: Array<{ href: string; label: string; icon: React.ElementType; exact?: boolean }>;
+  items: Array<{ href: string; label: string; icon: React.ElementType; exact?: boolean; badge?: string }>;
 }> = [
   {
+    title: "HQ",
     items: [
-      { href: "/hq", label: "Home", icon: Home, exact: true },
-      { href: "/employees", label: "AI Employees", icon: Users },
-      { href: "/hq/work-inbox", label: "Work Review", icon: Inbox },
-      { href: "/hq/tasks", label: "Tasks", icon: ListChecks },
-      { href: "/hq/goals", label: "Company Goals", icon: Target },
+      { href: "/hq", label: "Company HQ", icon: Home, exact: true },
       { href: "/hq/briefing", label: "CEO Briefing", icon: Sparkles },
-      { href: "/leads", label: "Leads", icon: Target },
-      { href: "/knowledge-base", label: "Knowledge Base", icon: GraduationCap },
-      { href: "/reports", label: "Reports", icon: LineChart },
+      { href: "/growth", label: "Growth Command Center", icon: Compass },
+      { href: "/hq/work-inbox", label: "Work Inbox", icon: Inbox },
+      { href: "/hq/goals", label: "Goals", icon: Target },
+      { href: "/hq/tasks", label: "Task Board", icon: ListChecks },
+    ],
+  },
+  {
+    title: "Business Builder",
+    items: [
+      { href: "/business-dna", label: "Business DNA", icon: Dna },
+      { href: "/business-score", label: "Business Score", icon: Gauge },
+      { href: "/market-research", label: "Market Research", icon: Search, badge: "Soon" },
+      { href: "/competitors", label: "Competitor Analysis", icon: Swords, badge: "Soon" },
+      { href: "/offer", label: "Offer Builder", icon: Package },
+      { href: "/website", label: "Website Builder", icon: Globe, badge: "Soon" },
+      { href: "/launch", label: "Launch Plan", icon: Rocket },
+    ],
+  },
+  {
+    title: "Growth",
+    items: [
+      { href: "/ads", label: "Ads & Content", icon: Megaphone, badge: "Soon" },
+      { href: "/campaigns", label: "Campaigns", icon: Megaphone },
+      { href: "/leads", label: "Lead System", icon: Users },
+      { href: "/crm", label: "CRM", icon: Briefcase, badge: "Soon" },
+      { href: "/roadmap", label: "Growth Roadmap", icon: TrendingUp },
+      { href: "/weekly-tasks", label: "Weekly Tasks", icon: CalendarCheck, badge: "Soon" },
       { href: "/analytics", label: "Analytics", icon: BarChart3 },
     ],
   },
@@ -59,30 +94,32 @@ const groups: Array<{
     items: [
       { href: "/departments/executive", label: "Executive", icon: Sparkles },
       { href: "/departments/sales", label: "Sales", icon: Briefcase },
-      { href: "/departments/support", label: "Customer Support", icon: LifeBuoy },
       { href: "/departments/marketing", label: "Marketing", icon: Megaphone },
+      { href: "/departments/support", label: "Support", icon: LifeBuoy },
       { href: "/departments/research", label: "Research", icon: Search },
       { href: "/departments/finance", label: "Finance", icon: LineChart },
       { href: "/departments/operations", label: "Operations", icon: Wrench },
       { href: "/departments/product-website", label: "Product & Website", icon: Globe },
       { href: "/departments/admin", label: "Admin", icon: Folder },
-      { href: "/departments/legal", label: "Legal & Compliance", icon: Scale },
+      { href: "/departments/legal", label: "Legal", icon: Scale },
     ],
   },
   {
-    title: "Business",
+    title: "Company",
     items: [
+      { href: "/employees", label: "AI Employees", icon: Users },
+      { href: "/knowledge-base", label: "Knowledge Base", icon: GraduationCap },
+      { href: "/customers", label: "Customers", icon: Building2 },
       { href: "/conversations", label: "Conversations", icon: MessageSquare },
-      { href: "/campaigns", label: "Campaigns", icon: Megaphone },
-      { href: "/widget", label: "Website Widget", icon: Globe },
+      { href: "/reports", label: "Reports", icon: BarChart3 },
       { href: "/integrations", label: "Integrations", icon: Plug },
-      { href: "/team", label: "Team", icon: Users },
     ],
   },
   {
     title: "System",
     items: [
       { href: "/billing", label: "Billing", icon: CreditCard },
+      { href: "/team", label: "Team", icon: Users },
       { href: "/settings", label: "Settings", icon: Settings },
     ],
   },
@@ -140,7 +177,16 @@ export function HqSidebar({ collapsed }: HqSidebarProps) {
                         className={cn(active && "text-accent")}
                         strokeWidth={active ? 2 : 1.7}
                       />
-                      {!collapsed && <span className="flex-1 truncate">{item.label}</span>}
+                      {!collapsed && (
+                        <>
+                          <span className="flex-1 truncate">{item.label}</span>
+                          {item.badge && (
+                            <span className="rounded-full border border-border bg-bg/60 px-1.5 py-0 text-[9.5px] font-medium uppercase tracking-wide text-muted-text">
+                              {item.badge}
+                            </span>
+                          )}
+                        </>
+                      )}
                     </Link>
                   </li>
                 );

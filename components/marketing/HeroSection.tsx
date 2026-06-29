@@ -57,13 +57,13 @@ export function HeroSection() {
             className="mb-8 inline-flex items-center gap-2 rounded-full border border-border bg-surface/80 px-3 py-1 text-[12px] text-secondary backdrop-blur"
           >
             <span className="inline-block h-1.5 w-1.5 rounded-full bg-success animate-pulse-status" />
-            <span>Hiring AI employees · 500+ founders onboarded</span>
+            <span>AI Business Growth Agent · AI Company OS · 500+ founders onboarded</span>
             <ArrowRight size={11} className="text-muted-text" />
           </motion.div>
 
           {/* Headline — kinetic reveal */}
-          <h1 className="text-[56px] font-semibold leading-[1.02] tracking-[-0.03em] text-text md:text-[72px] lg:text-[88px]">
-            {"Your AI company,".split("").map((char, i) => (
+          <h1 className="text-[48px] font-semibold leading-[1.02] tracking-[-0.03em] text-text md:text-[64px] lg:text-[80px]">
+            {"Build and grow your business".split("").map((char, i) => (
               <motion.span
                 key={`a-${i}`}
                 initial={{ opacity: 0, y: 12 }}
@@ -75,7 +75,7 @@ export function HeroSection() {
               </motion.span>
             ))}
             <br />
-            <span className="text-accent">{"operating 24/7.".split("").map((char, i) => (
+            <span className="text-accent">{"with a 24/7 AI company.".split("").map((char, i) => (
               <motion.span
                 key={`b-${i}`}
                 initial={{ opacity: 0, y: 12 }}
@@ -95,8 +95,9 @@ export function HeroSection() {
             transition={{ duration: 0.5, delay: 0.6 }}
             className="mx-auto mt-6 max-w-2xl text-[16px] leading-relaxed text-secondary md:text-[18px]"
           >
-            Reklu gives every business an{" "}
-            <span className="font-medium text-text">AI CEO</span>, departments, employees, tasks, approvals, reports, and business memory — all inside one operating system.
+            Reklu turns your business idea into{" "}
+            <span className="font-medium text-text">strategy, website, ads, content, leads, and growth tasks</span>{" "}
+            — executed by an AI CEO and a full company team, all inside one operating system.
           </motion.p>
 
           {/* CTAs */}
@@ -108,14 +109,14 @@ export function HeroSection() {
           >
             <Button asChild size="lg">
               <Link href="/sign-up" className="group">
-                Build My AI Company
+                Build My Business
                 <ArrowRight size={14} className="transition-transform group-hover:translate-x-0.5" />
               </Link>
             </Button>
             <Button asChild size="lg" variant="secondary">
               <Link href="#showcase">
                 <Play size={12} fill="currentColor" />
-                Watch 2-min tour
+                Watch Demo
               </Link>
             </Button>
           </motion.div>
@@ -133,9 +134,9 @@ export function HeroSection() {
               <span>command menu</span>
             </span>
             <span className="text-border">·</span>
-            <span>Free for 1 AI employee forever</span>
+            <span>Free to start · No credit card</span>
             <span className="text-border">·</span>
-            <span>No credit card</span>
+            <span>Idea → Live in 7 days</span>
           </motion.div>
         </div>
 

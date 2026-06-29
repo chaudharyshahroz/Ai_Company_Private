@@ -12,6 +12,11 @@ import type {
   Notification,
   BoardReport,
   BusinessBrain,
+  BusinessDna,
+  BusinessScore,
+  Offer,
+  GrowthRoadmap,
+  WeeklyTask,
 } from "@/lib/db/schema";
 import { DEMO_USER } from "@/lib/demo";
 
@@ -1046,4 +1051,360 @@ export const MOCK_CREDIT_HISTORY = [
   { id: "c-4", date: "2026-06-22", employee: "Nova (Research Manager)", task: "Competitor scan", credits: 4 },
   { id: "c-5", date: "2026-06-22", employee: "Pixel (Website)", task: "CTA improvement", credits: 2 },
   { id: "c-6", date: "2026-06-22", employee: "Atlas (CEO)", task: "Weekly briefing", credits: 3 },
+];
+
+// ─── Business DNA ──────────────────────────────────────────
+// The foundation of every AI output. One per user.
+
+export const MOCK_BUSINESS_DNA: BusinessDna = {
+  id: "dna-001",
+  userId: DEMO_USER.id,
+  sourceMode: "start_new",
+
+  // Overview
+  businessName: "Acme AI Studios",
+  tagline: "AI-powered websites for local service businesses",
+  businessIdea:
+    "We build AI-powered websites and lead-capture systems for local service businesses (clinics, dentists, real estate agents) that miss leads after hours.",
+  industry: "Marketing & Advertising",
+  businessType: "online",
+  country: "United States",
+  city: "Austin, TX",
+  market: "regional",
+  stage: "launching",
+
+  // Customer
+  targetCustomer:
+    "Local service business owners (clinics, dental practices, real estate agents) in Tier-1 US cities doing $500k-$5M/year who lose leads after hours.",
+  customerPainPoints: [
+    "Miss 40-60% of calls and form submissions outside business hours",
+    "No automated follow-up when leads come in cold",
+    "Website is a digital brochure, not a 24/7 sales rep",
+    "Spending on ads but can't tie spend to booked appointments",
+  ],
+  customerDemographics: "Owner-operator, 30-55, mid-market service business",
+
+  // Offer
+  mainOffer:
+    "Done-for-you AI website + WhatsApp/SMS auto-reply + booking system, set up in 14 days.",
+  priceRange: "$1,500-$3,500 setup + $299/mo",
+  revenueTarget: "$50k MRR by month 12",
+
+  // Brand
+  brandTone: "premium",
+  brandVoiceNotes:
+    "Calm confidence. No hype. We sound like a senior partner, not a growth-hacker. Short sentences. Numbers > adjectives.",
+
+  // Assets
+  websiteUrl: "https://acmeaistudios.example",
+  socialLinks: {
+    linkedin: "https://linkedin.com/company/acme-ai-studios",
+    twitter: "https://x.com/acmeaistudios",
+    instagram: "https://instagram.com/acmeaistudios",
+  },
+
+  // Competitors
+  competitors: [
+    { name: "ServiceTitan", url: "servicetitan.com", notes: "Enterprise. Way too expensive and complex for our ICP." },
+    { name: "Birdeye", url: "birdeye.com", notes: "Reviews-focused. Doesn't solve the after-hours lead problem." },
+    { name: "Local Lead AI", url: "localleadai.com", notes: "Direct competitor. We beat them on speed and pricing." },
+  ],
+
+  // Goals & problems
+  mainGoal: "Get 10 paying clients in the next 90 days",
+  currentProblems: [
+    "No clear niche positioning",
+    "Outbound is manual and slow",
+    "Can't prove ROI to prospects",
+  ],
+  budget: "$5k-$15k for first 90 days",
+  timeline: "First paying client in 30 days, 10 clients in 90 days",
+  skillLevel: "intermediate",
+  preferredChannels: ["linkedin", "email", "instagram", "facebook_ads"],
+
+  // AI-generated
+  aiSummary:
+    "Strong niche: local service businesses in Tier-1 cities who miss leads after hours. The wedge is 'AI website + 24/7 lead capture in 14 days' — concrete, fast, and tied to revenue. Differentiate from ServiceTitan (enterprise) and Birdeye (reviews-only) by being the simplest done-for-you offer at a price point a solo operator can sign off on without a board meeting.",
+  aiRecommendedNiche:
+    "AI appointment + lead-reply system for dental clinics and med-spa in cities with >500k population.",
+  aiRecommendedPositioning:
+    "The 14-day AI front-desk for local service businesses. We don't replace your receptionist — we cover the 60% of leads that happen after they go home.",
+
+  createdAt: "2026-06-01T00:00:00Z",
+  updatedAt: "2026-06-25T00:00:00Z",
+};
+
+// ─── Business Score ─────────────────────────────────────────
+
+export const MOCK_BUSINESS_SCORE: BusinessScore = {
+  id: "score-001",
+  userId: DEMO_USER.id,
+
+  overall: 78,
+  demand: 84,
+  competition: 68, // higher = less competition
+  differentiation: 81,
+  profitPotential: 75,
+  launchDifficulty: 70, // higher = easier
+  growthPotential: 86,
+  riskScore: 72, // higher = lower risk
+
+  verdict: "good_needs_positioning",
+  canIWinAnswer:
+    "Yes, you can win — but not by selling 'AI websites' generically. Your best angle is AI appointment automation for dental clinics and med-spas in Tier-1 US cities. These businesses answer phones 9-5 but miss 40-60% of after-hours inquiries, they have budget (avg LTV $3k-$15k), and they buy fast when ROI is concrete. Skip restaurants and gyms — they churn and haggle on price.",
+
+  breakdown: [
+    { dimension: "Market Demand", score: 84, note: "Strong: 73% of local service businesses report after-hours lead loss." },
+    { dimension: "Competition", score: 68, note: "Moderate: ServiceTitan dominates enterprise; you win the SMB gap." },
+    { dimension: "Differentiation", score: 81, note: "Strong: 14-day setup + flat pricing beats 6-month agency engagements." },
+    { dimension: "Profit Potential", score: 75, note: "Good: $1.5k-$3.5k setup + $299/mo = 6-month payback at ~70% margin." },
+    { dimension: "Launch Difficulty", score: 70, note: "Easy: niche is reachable on LinkedIn, demos are visual, no infra to build." },
+    { dimension: "Growth Potential", score: 86, note: "High: every clinic/dental in every city is a prospect. Geography is your CAC lever." },
+    { dimension: "Risk", score: 72, note: "Moderate: dependent on Meta/Google ads reach; can offset with outbound." },
+  ],
+
+  createdAt: "2026-06-25T00:00:00Z",
+};
+
+export const MOCK_BUSINESS_SCORE_HISTORY: BusinessScore[] = [
+  { ...MOCK_BUSINESS_SCORE, overall: 62, createdAt: "2026-05-01T00:00:00Z" },
+  { ...MOCK_BUSINESS_SCORE, overall: 68, createdAt: "2026-05-15T00:00:00Z" },
+  { ...MOCK_BUSINESS_SCORE, overall: 71, createdAt: "2026-06-01T00:00:00Z" },
+  { ...MOCK_BUSINESS_SCORE, overall: 74, createdAt: "2026-06-15T00:00:00Z" },
+  { ...MOCK_BUSINESS_SCORE, overall: 78, createdAt: "2026-06-25T00:00:00Z" },
+];
+
+// ─── Offers ────────────────────────────────────────────────
+
+export const MOCK_OFFERS: Offer[] = [
+  {
+    id: "offer-001",
+    userId: DEMO_USER.id,
+    offerName: "AI Front-Desk System",
+    promise:
+      "Never miss another lead. We set up an AI front-desk for your business that replies within 30 seconds — 24/7 — and books appointments straight into your calendar.",
+    targetCustomer: "Local service business owners in Tier-1 US cities (dental, med-spa, real estate)",
+    packages: [
+      {
+        name: "Starter",
+        price: "$1,500 setup + $199/mo",
+        bestFor: "Solo clinics testing AI lead capture for the first time",
+        features: [
+          "AI website (1 page)",
+          "After-hours SMS/WhatsApp auto-reply",
+          "Calendar booking integration",
+          "Weekly lead report",
+        ],
+        outcome: "Capture leads 24/7. Book 5-10 extra appointments/month.",
+        cta: "Get Started",
+      },
+      {
+        name: "Growth",
+        price: "$3,500 setup + $399/mo",
+        bestFor: "Established practices doing $500k+ with multiple lead sources",
+        features: [
+          "Multi-page AI website (5 pages)",
+          "AI front-desk with appointment booking",
+          "Missed-call-text-back",
+          "Lead-to-CRM pipeline (HubSpot or Pipedrive)",
+          "Bi-weekly optimization",
+        ],
+        outcome: "30% more booked appointments in 60 days, or money back.",
+        cta: "Book a Demo",
+      },
+      {
+        name: "Premium",
+        price: "$7,500 setup + $799/mo",
+        bestFor: "Multi-location businesses or agencies white-labeling the system",
+        features: [
+          "Everything in Growth",
+          "Multi-location support",
+          "Custom AI agent trained on your FAQs",
+          "White-label client dashboard",
+          "Dedicated success manager",
+        ],
+        outcome: "Full white-label system for up to 10 client locations.",
+        cta: "Talk to Us",
+      },
+    ],
+    salesPitch:
+      "Hi [Name], I help local service businesses stop losing leads after hours. We set up an AI front-desk in 14 days that replies to every inquiry in under 30 seconds and books appointments straight into your calendar. Most clients see 5-10 extra booked appointments in the first month. Worth 15 minutes?",
+    coldDmScript:
+      "Hey [Name] — saw you run [Clinic Name]. Quick question: what happens when someone calls or messages after 6pm? Most practices lose ~40% of leads that way. We built a 14-day AI front-desk that catches them. Want me to show you a 2-min demo?",
+    whatsappPitch:
+      "Hey [Name] 👋 — I help local clinics catch every lead, even at 11pm. We set up an AI receptionist in 14 days that books appointments straight into your calendar. No contracts. Want to see how it works for [Clinic Name]?",
+    emailPitch:
+      "Subject: 40% of your leads probably happen after 6pm.\n\nHi [Name],\n\nMost local service businesses lose 4 in 10 leads because they happen after hours. We built a 14-day AI front-desk that catches every inquiry and books straight into your calendar.\n\nQuick 15-min demo?",
+    landingHeadline: "Never lose another lead after 6pm.",
+    guarantee:
+      "If you don't book at least 30% more appointments in 60 days, we'll work free until you do.",
+    bonuses: [
+      "Free missed-call-text-back setup ($500 value)",
+      "14-day implementation — no waiting",
+      "30-day money-back guarantee",
+    ],
+    isActive: true,
+    createdAt: "2026-06-20T00:00:00Z",
+  },
+];
+
+// ─── Growth Roadmap (7-day launch plan) ────────────────────
+
+export const MOCK_GROWTH_ROADMAP: GrowthRoadmap = {
+  id: "rm-001",
+  userId: DEMO_USER.id,
+  kind: "launch_7",
+  title: "7-Day Launch Plan",
+  summary:
+    "From finalized offer to your first booked demo — generated by your AI CEO based on your Business DNA.",
+  items: [
+    {
+      day: 1,
+      task: "Finalize your offer and pricing",
+      objective: "Lock in 3-tier packages and the core promise",
+      whyItMatters: "Most businesses fail because their offer is fuzzy. Lock it before anything else.",
+      department: "Marketing",
+      employee: "Maya (CMO)",
+      difficulty: "easy",
+      expectedResult: "Clear offer, 3 tiers, headline, guarantee.",
+      status: "done",
+    },
+    {
+      day: 2,
+      task: "Build your landing page",
+      objective: "Get a publishable landing page live",
+      whyItMatters: "You need somewhere to send leads today. Not tomorrow.",
+      department: "Product & Website",
+      employee: "Pixel (Website Agent)",
+      difficulty: "medium",
+      expectedResult: "Live landing page with offer + CTA + lead form.",
+      status: "done",
+    },
+    {
+      day: 3,
+      task: "Generate first content campaign",
+      objective: "Ship 7 LinkedIn posts + 3 cold email scripts",
+      whyItMatters: "Outbound starts day 1. Content compounds by day 30.",
+      department: "Marketing",
+      employee: "Aria (Content Writer)",
+      difficulty: "easy",
+      expectedResult: "7-day content calendar ready to publish.",
+      status: "in_progress",
+    },
+    {
+      day: 4,
+      task: "Build your lead list",
+      objective: "Find 50 qualified prospects",
+      whyItMatters: "Outbound without a list is just noise.",
+      department: "Sales",
+      employee: "Nova (Lead Finder)",
+      difficulty: "medium",
+      expectedResult: "50 prospects with name, email, company, hook.",
+      status: "todo",
+    },
+    {
+      day: 5,
+      task: "Write your 5-step follow-up sequence",
+      objective: "Automated follow-up cadence",
+      whyItMatters: "80% of deals close between touch 2 and 5. Most people stop at 1.",
+      department: "Sales",
+      employee: "Echo (Outreach)",
+      difficulty: "medium",
+      expectedResult: "5-email sequence with subject lines, hooks, and CTAs.",
+      status: "todo",
+    },
+    {
+      day: 6,
+      task: "Launch your first outbound campaign",
+      objective: "Send 50 personalized messages",
+      whyItMatters: "Revenue comes from conversations. Start them.",
+      department: "Sales",
+      employee: "Echo (Outreach)",
+      difficulty: "hard",
+      expectedResult: "50 messages sent, 10 replies expected.",
+      status: "todo",
+    },
+    {
+      day: 7,
+      task: "Review and improve",
+      objective: "Analyze results, pick next week's focus",
+      whyItMatters: "Speed of iteration is the only moat in 2026.",
+      department: "Executive",
+      employee: "Atlas (CEO)",
+      difficulty: "easy",
+      expectedResult: "Week 2 priority list.",
+      status: "todo",
+    },
+  ],
+  createdAt: "2026-06-25T00:00:00Z",
+};
+
+// ─── Weekly Tasks (AI CEO's next-best-actions) ─────────────
+
+export const MOCK_WEEKLY_TASKS: WeeklyTask[] = [
+  {
+    id: "wt-1",
+    userId: DEMO_USER.id,
+    weekStart: "2026-06-23",
+    task: "Publish 3 LinkedIn posts about your offer",
+    reason: "Content compounds. You're at week 1 — every post is a permanent asset.",
+    expectedResult: "3 posts live, 2k impressions, 5 connection requests.",
+    assignedDepartment: "marketing",
+    dueDate: "2026-06-26",
+    status: "in_progress",
+    oneClickAction: "/ads",
+    createdAt: "2026-06-23T00:00:00Z",
+  },
+  {
+    id: "wt-2",
+    userId: DEMO_USER.id,
+    weekStart: "2026-06-23",
+    task: "Send 30 personalized cold DMs",
+    reason: "Your pipeline is your business. DMs today = meetings next week.",
+    expectedResult: "30 DMs sent, 8 replies, 2 calls booked.",
+    assignedDepartment: "sales",
+    dueDate: "2026-06-27",
+    status: "todo",
+    oneClickAction: "/leads",
+    createdAt: "2026-06-23T00:00:00Z",
+  },
+  {
+    id: "wt-3",
+    userId: DEMO_USER.id,
+    weekStart: "2026-06-23",
+    task: "Improve landing page headline",
+    reason: "Current headline is generic. A specific promise converts 2-3x better.",
+    expectedResult: "New headline tested, conversion +20%.",
+    assignedDepartment: "product-website",
+    dueDate: "2026-06-28",
+    status: "todo",
+    oneClickAction: "/website",
+    createdAt: "2026-06-23T00:00:00Z",
+  },
+  {
+    id: "wt-4",
+    userId: DEMO_USER.id,
+    weekStart: "2026-06-23",
+    task: "Add WhatsApp CTA to your website",
+    reason: "Your ICP uses WhatsApp. One tap = conversation.",
+    expectedResult: "WhatsApp button live, 5+ chats/week.",
+    assignedDepartment: "product-website",
+    dueDate: "2026-06-29",
+    status: "todo",
+    oneClickAction: "/website",
+    createdAt: "2026-06-23T00:00:00Z",
+  },
+  {
+    id: "wt-5",
+    userId: DEMO_USER.id,
+    weekStart: "2026-06-23",
+    task: "Follow up with 8 warm leads",
+    reason: "Warm leads convert 5-10x better than cold. Don't let them cool.",
+    expectedResult: "8 follow-ups sent, 1 closed deal.",
+    assignedDepartment: "sales",
+    dueDate: "2026-06-30",
+    status: "todo",
+    oneClickAction: "/leads",
+    createdAt: "2026-06-23T00:00:00Z",
+  },
 ];

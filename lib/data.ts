@@ -24,6 +24,12 @@ import {
   MOCK_WORK_INBOX,
   MOCK_TEAM_MEMBERS,
   MOCK_CREDIT_HISTORY,
+  MOCK_BUSINESS_DNA,
+  MOCK_BUSINESS_SCORE,
+  MOCK_BUSINESS_SCORE_HISTORY,
+  MOCK_OFFERS,
+  MOCK_GROWTH_ROADMAP,
+  MOCK_WEEKLY_TASKS,
 } from "./mock-data";
 import { EMPLOYEES, getEmployee as getEmployeeDef } from "./employees";
 import type {
@@ -317,4 +323,44 @@ export async function listTeamMembers() {
 
 export async function listCreditHistory() {
   return MOCK_CREDIT_HISTORY;
+}
+
+// ─── Business DNA ─────────────────────────────────────────
+
+export async function getBusinessDna(_userId: string) {
+  return MOCK_BUSINESS_DNA;
+}
+
+// ─── Business Score ───────────────────────────────────────
+
+export async function getBusinessScore(_userId: string) {
+  return MOCK_BUSINESS_SCORE;
+}
+
+export async function getBusinessScoreHistory(_userId: string) {
+  return MOCK_BUSINESS_SCORE_HISTORY;
+}
+
+// ─── Offers ───────────────────────────────────────────────
+
+export async function listOffers(_userId: string) {
+  return MOCK_OFFERS;
+}
+
+export async function getActiveOffer(_userId: string) {
+  return MOCK_OFFERS.find((o) => o.isActive) ?? MOCK_OFFERS[0];
+}
+
+// ─── Growth Roadmap ───────────────────────────────────────
+
+export async function getGrowthRoadmap(_userId: string, kind: "launch_7" | "growth_30" | "scaling_90" = "launch_7") {
+  if (kind === "launch_7") return MOCK_GROWTH_ROADMAP;
+  // Future: derive from MOCK_GROWTH_ROADMAP or return skeleton
+  return MOCK_GROWTH_ROADMAP;
+}
+
+// ─── Weekly Tasks ─────────────────────────────────────────
+
+export async function listWeeklyTasks(_userId: string) {
+  return MOCK_WEEKLY_TASKS;
 }
