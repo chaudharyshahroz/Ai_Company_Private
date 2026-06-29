@@ -25,18 +25,12 @@ To switch to real services, fill in `.env` (copy from `.env.example`) — each i
 
 ## Deployment
 
-Ready to ship? The full step-by-step is in **[`DOKPLOY.md`](./DOKPLOY.md)** — covers:
+Ready to ship? Two guides:
 
-- Pushing to GitHub
-- Installing Dokploy on a Hostinger VPS
-- Configuring the Dockerfile build in Dokploy
-- Domain + auto-SSL setup
-- Database options (Neon / Supabase / bundled Postgres)
-- Running migrations
-- Continuous deployment + rollbacks
-- Backups + observability + cost breakdown
+- **[`HOSTINGER.md`](./HOSTINGER.md)** — full Hostinger-specific walkthrough (recommended if you're on Hostinger): buy VPS, SSH in, open firewall, install Dokploy, point domain, env vars, deploy. **Start here.**
+- **[`DOKPLOY.md`](./DOKPLOY.md)** — generic Dokploy reference (Dokploy UI in depth, troubleshooting matrix).
 
-Short version: `git push origin main` → Dokploy auto-builds → live in ~3 minutes.
+Short version: `git push origin main` → GitHub Actions runs CI → Dokploy auto-builds → live in ~3 minutes.
 
 ---
 
