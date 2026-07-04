@@ -10,6 +10,7 @@ import {
   Inbox,
   ListChecks,
   Target,
+  Clock,
   // Business Builder
   Dna,
   Gauge,
@@ -60,7 +61,8 @@ const groups: Array<{
       { href: "/hq", label: "Company HQ", icon: Home, exact: true },
       { href: "/hq/briefing", label: "CEO Briefing", icon: Sparkles },
       { href: "/growth", label: "Growth Command Center", icon: Compass },
-      { href: "/hq/work-inbox", label: "Work Inbox", icon: Inbox },
+      { href: "/work-review", label: "Work Review", icon: Inbox },
+      { href: "/scheduled-work", label: "Scheduled Work", icon: Clock },
       { href: "/hq/goals", label: "Goals", icon: Target },
       { href: "/hq/tasks", label: "Task Board", icon: ListChecks },
     ],

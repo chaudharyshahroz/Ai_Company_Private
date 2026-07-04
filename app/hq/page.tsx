@@ -19,6 +19,11 @@ import {
   ChevronRight,
   Dna,
   Package,
+  Inbox,
+  Search,
+  Clock,
+  Coins,
+  Calendar,
 } from "lucide-react";
 import { Panel } from "@/components/ui/Panel";
 import { Button } from "@/components/ui/Button";
@@ -35,7 +40,14 @@ import {
   getBusinessDna,
   getBusinessScore,
   listWeeklyTasks,
+  // Phase 3 — engine data
+  listWorkReviewItems,
+  listAgentRuns,
+  listScheduledWork,
+  listCompanyGoalsNew,
+  getCreditBalance,
 } from "@/lib/data";
+import { generateDailyBriefing } from "@/lib/ai-company";
 import { cn } from "@/lib/utils";
 
 export const dynamic = "force-dynamic";
@@ -76,6 +88,23 @@ export default async function HomePage() {
   const score = await getBusinessScore(user.id);
   const weeklyTasks = await listWeeklyTasks(user.id);
 
+  // Phase 3 — engine data
+  const [
+    pendingWorkItems,
+    recentRuns,
+    scheduledWork,
+    activeGoals,
+    creditBalance,
+    dailyBriefing,
+  ] = await Promise.all([
+    listWorkReviewItems(user.id, { status: "needs_approval" }),
+    listAgentRuns(user.id, { limit: 8 }),
+    listScheduledWork(user.id),
+    listCompanyGoalsNew(user.id),
+    getCreditBalance(user.id),
+    Promise.resolve(generateDailyBriefing(user.id)),
+  ]);
+
   // Surface the top 5 most important hired agents (or fewer if not hired)
   const priorityIds = [
     "emp-ceo",
@@ -95,6 +124,22 @@ export default async function HomePage() {
     title: w.title,
     who: w.employeeName,
     description: w.output?.slice(0, 90) ?? "Ready for your review",
+  }));
+
+  // Phase 3 — engine attention items (from the new Work Review queue)
+  const engineAttentionItems = pendingWorkItems.slice(0, 5).map((w: { id: string; kind: string; title: string; employeeName: string; summary: string }) => ({
+    id: w.id,
+    icon:
+      w.kind === "reply"
+        ? MessageSquare
+        : w.kind === "outreach"
+          ? Megaphone
+          : w.kind === "research"
+            ? Search
+            : FileText,
+    title: w.title,
+    who: w.employeeName,
+    description: w.summary.slice(0, 120),
   }));
 
   const greeting =
@@ -187,6 +232,117 @@ export default async function HomePage() {
               </Link>
             </section>
           )}
+
+          {/* ── Section 1c′: AI Engine Status Row ──────────────────────── */}
+          {pendingWorkItems.length > 0 || scheduledWork.length > 0 || creditBalance ? (
+            <section className="mb-10">
+              <div className="mb-3 flex items-center justify-between">
+                <h2 className="text-[13px] font-semibold uppercase tracking-[0.04em] text-muted-text">
+                  AI Engine — Live Status
+                </h2>
+                <Link
+                  href="/work-review"
+                  className="flex items-center gap-1 text-[12.5px] font-medium text-accent hover:underline"
+                >
+                  Open Work Review
+                  <ArrowRight size={12} />
+                </Link>
+              </div>
+              <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
+                {/* Pending Approvals */}
+                <Link href="/work-review" className="block">
+                  <Panel hoverable className="p-5">
+                    <div className="flex items-center justify-between">
+                      <div className="flex items-center gap-2 text-[11px] font-medium uppercase tracking-wider text-muted-text">
+                        <Inbox size={12} className="text-warning" />
+                        Pending Approvals
+                      </div>
+                      <ChevronRight size={14} className="text-muted-text" />
+                    </div>
+                    <div className="mt-3 flex items-baseline gap-2">
+                      <span className="font-mono text-[36px] font-semibold leading-none tabular-nums text-text">
+                        {pendingWorkItems.length}
+                      </span>
+                    </div>
+                    <p className="mt-1 text-[12px] text-muted-text">
+                      AI employees waiting on you
+                    </p>
+                  </Panel>
+                </Link>
+
+                {/* Active Goals */}
+                <Link href="/hq/goals" className="block">
+                  <Panel hoverable className="p-5">
+                    <div className="flex items-center justify-between">
+                      <div className="flex items-center gap-2 text-[11px] font-medium uppercase tracking-wider text-muted-text">
+                        <Target size={12} className="text-accent" />
+                        Active Goals
+                      </div>
+                      <ChevronRight size={14} className="text-muted-text" />
+                    </div>
+                    <div className="mt-3 flex items-baseline gap-2">
+                      <span className="font-mono text-[36px] font-semibold leading-none tabular-nums text-text">
+                        {activeGoals.filter((g: { status: string }) => g.status === "active" || g.status === "in_progress").length}
+                      </span>
+                      <span className="text-[13px] text-muted-text">
+                        / {activeGoals.length} total
+                      </span>
+                    </div>
+                    <p className="mt-1 text-[12px] text-muted-text">
+                      Plans approved and executing
+                    </p>
+                  </Panel>
+                </Link>
+
+                {/* Scheduled Work */}
+                <Link href="/scheduled-work" className="block">
+                  <Panel hoverable className="p-5">
+                    <div className="flex items-center justify-between">
+                      <div className="flex items-center gap-2 text-[11px] font-medium uppercase tracking-wider text-muted-text">
+                        <Clock size={12} className="text-accent-warm" />
+                        Scheduled Work
+                      </div>
+                      <ChevronRight size={14} className="text-muted-text" />
+                    </div>
+                    <div className="mt-3 flex items-baseline gap-2">
+                      <span className="font-mono text-[36px] font-semibold leading-none tabular-nums text-text">
+                        {scheduledWork.filter((s: { isEnabled: boolean }) => s.isEnabled).length}
+                      </span>
+                    </div>
+                    <p className="mt-1 text-[12px] text-muted-text">
+                      Heartbeats running on schedule
+                    </p>
+                  </Panel>
+                </Link>
+
+                {/* Credits */}
+                {creditBalance ? (
+                  <Link href="/billing" className="block">
+                    <Panel hoverable className="p-5">
+                      <div className="flex items-center justify-between">
+                        <div className="flex items-center gap-2 text-[11px] font-medium uppercase tracking-wider text-muted-text">
+                          <Coins size={12} className="text-success" />
+                          Credits
+                        </div>
+                        <ChevronRight size={14} className="text-muted-text" />
+                      </div>
+                      <div className="mt-3 flex items-baseline gap-2">
+                        <span className="font-mono text-[36px] font-semibold leading-none tabular-nums text-text">
+                          {creditBalance.monthlyAllowance - creditBalance.monthlyUsed}
+                        </span>
+                        <span className="text-[13px] text-muted-text">
+                          / {creditBalance.monthlyAllowance}
+                        </span>
+                      </div>
+                      <p className="mt-1 text-[12px] text-muted-text">
+                        Resets {creditBalance.periodEnd}
+                      </p>
+                    </Panel>
+                  </Link>
+                ) : null}
+              </div>
+            </section>
+          ) : null}
 
           {/* ── Section 1c: Top-level growth widgets (4 across) ──────── */}
           <section className="mb-10 grid gap-3 sm:grid-cols-2 lg:grid-cols-4">

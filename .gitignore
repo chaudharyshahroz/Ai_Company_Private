@@ -45,3 +45,8 @@ drizzle/
 # Testing
 coverage/
 .nyc_output/
+# GitHub Actions workflows require PAT `workflow` scope to push.
+# Keep on disk for local reference; re-add via GitHub web UI or
+# a PAT with workflow scope before pushing.
+.github/workflows/*.yml
+.github/workflows/*.yaml

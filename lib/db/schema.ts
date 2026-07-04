@@ -730,3 +730,780 @@ export type GrowthRoadmap = typeof growthRoadmaps.$inferSelect;
 export type NewGrowthRoadmap = typeof growthRoadmaps.$inferInsert;
 export type WeeklyTask = typeof weeklyTasks.$inferSelect;
 export type NewWeeklyTask = typeof weeklyTasks.$inferInsert;
+
+// ─────────────────────────────────────────────────────────────
+//  Phase 3 — AI Company Engine
+//  Mission → Goal → Department Goal → Task → Work Review → Approval
+// ─────────────────────────────────────────────────────────────
+
+// ─── Enums ───────────────────────────────────────────────────
+
+export const missionCadenceEnum = pgEnum("mission_cadence", [
+  "ongoing",
+  "quarterly",
+  "monthly",
+  "yearly",
+]);
+
+export const goalStatusEnum = pgEnum("goal_status", [
+  "draft",
+  "planning",
+  "active",
+  "in_progress",
+  "completed",
+  "paused",
+  "archived",
+]);
+
+export const goalHorizonEnum = pgEnum("goal_horizon", [
+  "30_day",
+  "90_day",
+  "annual",
+]);
+
+export const workReviewStatusEnum = pgEnum("work_review_status", [
+  "needs_approval",
+  "ready_to_send",
+  "ready_to_publish",
+  "ready_to_save",
+  "completed",
+  "rejected",
+  "regenerating",
+]);
+
+export const workReviewKindEnum = pgEnum("work_review_kind", [
+  "draft",
+  "research",
+  "outreach",
+  "content",
+  "analysis",
+  "reply",
+  "report",
+  "plan",
+  "campaign",
+  "legal_draft",
+  "finance_draft",
+]);
+
+export const approvalActionEnum = pgEnum("approval_action", [
+  "approve",
+  "reject",
+  "edit",
+  "regenerate",
+  "save_to_kb",
+  "send",
+  "publish",
+  "assign_to_other",
+]);
+
+export const agentRunStatusEnum = pgEnum("agent_run_status", [
+  "queued",
+  "running",
+  "evaluating",
+  "completed",
+  "failed",
+  "cancelled",
+  "needs_approval",
+  "rejected",
+]);
+
+export const knowledgeSourceEnum = pgEnum("knowledge_source", [
+  "user_added",
+  "ai_generated",
+  "document",
+  "approved_work",
+  "url",
+  "crm",
+  "conversation",
+]);
+
+export const scheduledWorkFrequencyEnum = pgEnum("scheduled_work_frequency", [
+  "hourly",
+  "daily",
+  "weekly",
+  "biweekly",
+  "monthly",
+]);
+
+export const auditActionEnum = pgEnum("audit_action", [
+  "company_created",
+  "company_updated",
+  "mission_set",
+  "goal_created",
+  "goal_archived",
+  "plan_generated",
+  "plan_approved",
+  "plan_rejected",
+  "task_created",
+  "task_assigned",
+  "task_run",
+  "task_completed",
+  "task_failed",
+  "work_review_created",
+  "work_review_approved",
+  "work_review_rejected",
+  "work_review_regenerated",
+  "work_review_saved_to_kb",
+  "work_review_sent",
+  "work_review_published",
+  "employee_hired",
+  "employee_paused",
+  "employee_deleted",
+  "employee_permission_changed",
+  "employee_budget_changed",
+  "scheduled_work_enabled",
+  "scheduled_work_disabled",
+  "scheduled_work_executed",
+  "credits_used",
+  "credits_budget_reached",
+  "integration_connected",
+  "integration_disconnected",
+  "billing_changed",
+  "plan_changed",
+  "knowledge_item_added",
+  "knowledge_item_deleted",
+]);
+
+// ─── Company Missions ────────────────────────────────────────
+
+export const companyMissions = pgTable(
+  "company_missions",
+  {
+    id: uuid("id").primaryKey().defaultRandom(),
+    userId: uuid("user_id")
+      .notNull()
+      .unique()
+      .references(() => users.id, { onDelete: "cascade" }),
+
+    mission: text("mission").notNull(), // "Get 50 qualified leads per month"
+    vision: text("vision"), // longer narrative
+    cadence: missionCadenceEnum("cadence").notNull().default("ongoing"),
+    northStarMetric: text("north_star_metric"), // e.g. "qualified_leads_per_month"
+    northStarTarget: text("north_star_target"),
+
+    values: jsonb("values").$type<string[]>().notNull().default(sql`'[]'::jsonb`),
+
+    createdAt: timestamp("created_at", { withTimezone: true, mode: "string" })
+      .notNull()
+      .defaultNow(),
+    updatedAt: timestamp("updated_at", { withTimezone: true, mode: "string" })
+      .notNull()
+      .defaultNow(),
+  },
+  (t) => ({
+    userIdx: uniqueIndex("company_missions_user_idx").on(t.userId),
+  }),
+);
+
+// ─── Company Goals ───────────────────────────────────────────
+
+export const companyGoals = pgTable(
+  "company_goals",
+  {
+    id: uuid("id").primaryKey().defaultRandom(),
+    userId: uuid("user_id")
+      .notNull()
+      .references(() => users.id, { onDelete: "cascade" }),
+    missionId: uuid("mission_id").references(() => companyMissions.id, {
+      onDelete: "set null",
+    }),
+
+    title: text("title").notNull(),
+    description: text("description"),
+    horizon: goalHorizonEnum("horizon").notNull().default("30_day"),
+    status: goalStatusEnum("status").notNull().default("draft"),
+
+    successMetric: text("success_metric"), // "qualified leads"
+    successTarget: text("success_target"), // "100"
+
+    // Progress (0-100)
+    progressPct: integer("progress_pct").notNull().default(0),
+
+    // The CEO-generated plan, stored as JSON
+    ceoPlan: jsonb("ceo_plan")
+      .$type<{
+        rationale: string;
+        risks: string[];
+        departmentBreakdown: Array<{
+          department: string;
+          tasks: Array<{
+            title: string;
+            objective: string;
+            suggestedEmployeeSlug: string;
+            suggestedSkill: string;
+            estimatedCredits: number;
+            requiresApproval: boolean;
+            scheduledWithinDays: number;
+          }>;
+        }>;
+      }>()
+      .default(sql`'{}'::jsonb`),
+
+    planApprovedAt: timestamp("plan_approved_at", { withTimezone: true, mode: "string" }),
+    planApprovedBy: text("plan_approved_by"), // "user" | "auto"
+
+    dueDate: date("due_date"),
+    completedAt: timestamp("completed_at", { withTimezone: true, mode: "string" }),
+    archivedAt: timestamp("archived_at", { withTimezone: true, mode: "string" }),
+
+    createdAt: timestamp("created_at", { withTimezone: true, mode: "string" })
+      .notNull()
+      .defaultNow(),
+    updatedAt: timestamp("updated_at", { withTimezone: true, mode: "string" })
+      .notNull()
+      .defaultNow(),
+  },
+  (t) => ({
+    userIdx: index("company_goals_user_idx").on(t.userId),
+    userStatusIdx: index("company_goals_user_status_idx").on(t.userId, t.status),
+  }),
+);
+
+// ─── Department Goals ────────────────────────────────────────
+
+export const departmentGoals = pgTable(
+  "department_goals",
+  {
+    id: uuid("id").primaryKey().defaultRandom(),
+    userId: uuid("user_id")
+      .notNull()
+      .references(() => users.id, { onDelete: "cascade" }),
+    companyGoalId: uuid("company_goal_id")
+      .notNull()
+      .references(() => companyGoals.id, { onDelete: "cascade" }),
+    department: departmentEnum("department").notNull(),
+
+    objective: text("objective").notNull(),
+    metric: text("metric"),
+    targetValue: text("target_value"),
+
+    progressPct: integer("progress_pct").notNull().default(0),
+    status: goalStatusEnum("status").notNull().default("active"),
+
+    createdAt: timestamp("created_at", { withTimezone: true, mode: "string" })
+      .notNull()
+      .defaultNow(),
+  },
+  (t) => ({
+    goalIdx: index("department_goals_goal_idx").on(t.companyGoalId),
+    userDeptIdx: index("department_goals_user_dept_idx").on(t.userId, t.department),
+  }),
+);
+
+// ─── Work Review Items (the approval queue) ──────────────────
+
+export const workReviewItems = pgTable(
+  "work_review_items",
+  {
+    id: uuid("id").primaryKey().defaultRandom(),
+    userId: uuid("user_id")
+      .notNull()
+      .references(() => users.id, { onDelete: "cascade" }),
+
+    // Links
+    taskId: uuid("task_id").references(() => tasks.id, { onDelete: "set null" }),
+    goalId: uuid("goal_id").references(() => companyGoals.id, { onDelete: "set null" }),
+    departmentGoalId: uuid("department_goal_id").references(() => departmentGoals.id, {
+      onDelete: "set null",
+    }),
+    agentRunId: uuid("agent_run_id"), // self-ref after AgentRun created
+    hiredAgentId: uuid("hired_agent_id").references(() => hiredAgents.id, {
+      onDelete: "set null",
+    }),
+
+    // Identifiers for human display
+    title: text("title").notNull(),
+    summary: text("summary").notNull(), // 1-2 sentence summary
+    body: text("body").notNull(), // full structured output (markdown)
+    bodyStructured: jsonb("body_structured")
+      .$type<Record<string, unknown>>()
+      .default(sql`'{}'::jsonb`),
+
+    kind: workReviewKindEnum("kind").notNull().default("draft"),
+    status: workReviewStatusEnum("status").notNull().default("needs_approval"),
+    priority: taskPriorityEnum("priority").notNull().default("normal"),
+
+    employeeName: text("employee_name").notNull(), // "Aria — Content Writer"
+    employeeSlug: text("employee_slug").notNull(),
+    department: departmentEnum("department").notNull(),
+
+    // Evaluation
+    qualityScore: integer("quality_score"), // 0-100
+    relevanceScore: integer("relevance_score"),
+    safetyScore: integer("safety_score"),
+    confidenceScore: integer("confidence_score"),
+    evaluatorNotes: text("evaluator_notes"),
+    regenerationCount: integer("regeneration_count").notNull().default(0),
+
+    // Cost & approval gating
+    creditsEstimated: integer("credits_estimated").notNull().default(0),
+    requiresApproval: boolean("requires_approval").notNull().default(true),
+    approvalReason: text("approval_reason"),
+
+    suggestedNextAction: text("suggested_next_action"),
+
+    approvedAt: timestamp("approved_at", { withTimezone: true, mode: "string" }),
+    rejectedAt: timestamp("rejected_at", { withTimezone: true, mode: "string" }),
+    publishedAt: timestamp("published_at", { withTimezone: true, mode: "string" }),
+    sentAt: timestamp("sent_at", { withTimezone: true, mode: "string" }),
+
+    createdAt: timestamp("created_at", { withTimezone: true, mode: "string" })
+      .notNull()
+      .defaultNow(),
+    updatedAt: timestamp("updated_at", { withTimezone: true, mode: "string" })
+      .notNull()
+      .defaultNow(),
+  },
+  (t) => ({
+    userStatusIdx: index("work_review_user_status_idx").on(t.userId, t.status),
+    userCreatedIdx: index("work_review_user_created_idx").on(t.userId, t.createdAt),
+    goalIdx: index("work_review_goal_idx").on(t.goalId),
+    taskIdx: index("work_review_task_idx").on(t.taskId),
+  }),
+);
+
+// ─── Approvals (action history on a review item) ─────────────
+
+export const approvals = pgTable(
+  "approvals",
+  {
+    id: uuid("id").primaryKey().defaultRandom(),
+    userId: uuid("user_id")
+      .notNull()
+      .references(() => users.id, { onDelete: "cascade" }),
+    workReviewItemId: uuid("work_review_item_id")
+      .notNull()
+      .references(() => workReviewItems.id, { onDelete: "cascade" }),
+
+    action: approvalActionEnum("action").notNull(),
+    actor: text("actor").notNull().default("user"), // user | ai | system
+    note: text("note"),
+
+    // For "edit" actions
+    editedTitle: text("edited_title"),
+    editedBody: text("edited_body"),
+
+    // For "regenerate" — which employee
+    regenerateWithEmployeeSlug: text("regenerate_with_employee_slug"),
+    regenerateWithInstructions: text("regenerate_with_instructions"),
+
+    createdAt: timestamp("created_at", { withTimezone: true, mode: "string" })
+      .notNull()
+      .defaultNow(),
+  },
+  (t) => ({
+    itemIdx: index("approvals_item_idx").on(t.workReviewItemId),
+    userIdx: index("approvals_user_idx").on(t.userId),
+  }),
+);
+
+// ─── Agent Runs (every AI invocation) ────────────────────────
+
+export const agentRuns = pgTable(
+  "agent_runs",
+  {
+    id: uuid("id").primaryKey().defaultRandom(),
+    userId: uuid("user_id")
+      .notNull()
+      .references(() => users.id, { onDelete: "cascade" }),
+    companyId: uuid("company_id"), // nullable until missions are migrated
+    hiredAgentId: uuid("hired_agent_id").references(() => hiredAgents.id, {
+      onDelete: "set null",
+    }),
+    taskId: uuid("task_id").references(() => tasks.id, { onDelete: "set null" }),
+    goalId: uuid("goal_id").references(() => companyGoals.id, { onDelete: "set null" }),
+    workReviewItemId: uuid("work_review_item_id").references(() => workReviewItems.id, {
+      onDelete: "set null",
+    }),
+    scheduledWorkId: uuid("scheduled_work_id"), // self-ref
+
+    employeeSlug: text("employee_slug").notNull(),
+    employeeName: text("employee_name").notNull(),
+    department: text("department").notNull(),
+
+    modelProvider: text("model_provider").notNull().default("openrouter"),
+    modelName: text("model_name").notNull(),
+    promptVersion: text("prompt_version").notNull().default("v1"),
+
+    input: jsonb("input").$type<Record<string, unknown>>().default(sql`'{}'::jsonb`),
+    memoryUsed: jsonb("memory_used")
+      .$type<Array<{ source: string; title: string; snippet: string }>>()
+      .default(sql`'[]'::jsonb`),
+    toolsUsed: jsonb("tools_used")
+      .$type<Array<{ tool: string; result?: unknown }>>()
+      .default(sql`'[]'::jsonb`),
+    output: text("output"),
+    outputStructured: jsonb("output_structured").$type<Record<string, unknown>>(),
+
+    evaluatorResult: jsonb("evaluator_result")
+      .$type<{
+        qualityScore?: number;
+        relevanceScore?: number;
+        safetyScore?: number;
+        confidenceScore?: number;
+        notes?: string;
+        passed?: boolean;
+      }>()
+      .default(sql`'{}'::jsonb`),
+
+    creditsEstimated: integer("credits_estimated").notNull().default(0),
+    creditsActual: integer("credits_actual").notNull().default(0),
+
+    durationMs: integer("duration_ms").notNull().default(0),
+    status: agentRunStatusEnum("status").notNull().default("queued"),
+    errorMessage: text("error_message"),
+    errorStack: text("error_stack"),
+
+    startedAt: timestamp("started_at", { withTimezone: true, mode: "string" }),
+    completedAt: timestamp("completed_at", { withTimezone: true, mode: "string" }),
+
+    createdAt: timestamp("created_at", { withTimezone: true, mode: "string" })
+      .notNull()
+      .defaultNow(),
+  },
+  (t) => ({
+    userIdx: index("agent_runs_user_idx").on(t.userId),
+    userStatusIdx: index("agent_runs_user_status_idx").on(t.userId, t.status),
+    employeeIdx: index("agent_runs_employee_idx").on(t.employeeSlug),
+    createdIdx: index("agent_runs_created_idx").on(t.createdAt),
+  }),
+);
+
+// ─── Agent Run Steps (step-by-step trace) ────────────────────
+
+export const agentRunSteps = pgTable(
+  "agent_run_steps",
+  {
+    id: uuid("id").primaryKey().defaultRandom(),
+    agentRunId: uuid("agent_run_id")
+      .notNull()
+      .references(() => agentRuns.id, { onDelete: "cascade" }),
+
+    stepIndex: integer("step_index").notNull(),
+    stepName: text("step_name").notNull(), // "memory_retrieval" | "planner" | "tool_call" | "evaluator"
+    startedAt: timestamp("started_at", { withTimezone: true, mode: "string" }).notNull().defaultNow(),
+    completedAt: timestamp("completed_at", { withTimezone: true, mode: "string" }),
+    durationMs: integer("duration_ms").notNull().default(0),
+
+    input: jsonb("input").$type<Record<string, unknown>>().default(sql`'{}'::jsonb`),
+    output: jsonb("output").$type<Record<string, unknown>>().default(sql`'{}'::jsonb`),
+
+    status: text("status").notNull().default("running"), // running | completed | failed
+    errorMessage: text("error_message"),
+  },
+  (t) => ({
+    runIdx: index("agent_run_steps_run_idx").on(t.agentRunId, t.stepIndex),
+  }),
+);
+
+// ─── Knowledge Base Items (real semantic memory) ─────────────
+
+export const knowledgeBaseItems = pgTable(
+  "knowledge_base_items",
+  {
+    id: uuid("id").primaryKey().defaultRandom(),
+    userId: uuid("user_id")
+      .notNull()
+      .references(() => users.id, { onDelete: "cascade" }),
+
+    title: text("title").notNull(),
+    content: text("content").notNull(),
+    source: knowledgeSourceEnum("source").notNull().default("user_added"),
+    sourceRef: text("source_ref"), // doc id, url, workReviewItemId, etc.
+
+    tags: jsonb("tags").$type<string[]>().notNull().default(sql`'[]'::jsonb`),
+    scope: text("scope").notNull().default("all"), // all | sales | support | marketing | ...
+
+    // For semantic search — JSON-stored embedding (vector type added in pg migration).
+    // In demo mode we use keyword-overlap scoring.
+    embedding: jsonb("embedding").$type<number[]>(),
+
+    trainingWeight: integer("training_weight").notNull().default(50), // 0-100, higher = employee values this more
+    confidence: integer("confidence").notNull().default(80),
+
+    createdBy: text("created_by").notNull().default("user"), // user | ai
+    lastUsedAt: timestamp("last_used_at", { withTimezone: true, mode: "string" }),
+    useCount: integer("use_count").notNull().default(0),
+
+    createdAt: timestamp("created_at", { withTimezone: true, mode: "string" })
+      .notNull()
+      .defaultNow(),
+    updatedAt: timestamp("updated_at", { withTimezone: true, mode: "string" })
+      .notNull()
+      .defaultNow(),
+  },
+  (t) => ({
+    userIdx: index("kb_user_idx").on(t.userId),
+    userScopeIdx: index("kb_user_scope_idx").on(t.userId, t.scope),
+  }),
+);
+
+// ─── Scheduled Work (heartbeats) ─────────────────────────────
+
+export const scheduledWork = pgTable(
+  "scheduled_work",
+  {
+    id: uuid("id").primaryKey().defaultRandom(),
+    userId: uuid("user_id")
+      .notNull()
+      .references(() => users.id, { onDelete: "cascade" }),
+    hiredAgentId: uuid("hired_agent_id").references(() => hiredAgents.id, {
+      onDelete: "cascade",
+    }),
+    employeeSlug: text("employee_slug").notNull(),
+    employeeName: text("employee_name").notNull(),
+
+    title: text("title").notNull(),
+    description: text("description"),
+
+    frequency: scheduledWorkFrequencyEnum("frequency").notNull().default("daily"),
+    timeOfDay: text("time_of_day").notNull().default("09:00"), // HH:mm
+    dayOfWeek: integer("day_of_week"), // 0-6 for weekly
+    dayOfMonth: integer("day_of_month"), // 1-31 for monthly
+    timezone: text("timezone").notNull().default("UTC"),
+
+    taskTemplate: jsonb("task_template")
+      .$type<{
+        title: string;
+        description: string;
+        input?: Record<string, unknown>;
+      }>()
+      .notNull(),
+
+    isEnabled: boolean("is_enabled").notNull().default(true),
+    requiresApproval: boolean("requires_approval").notNull().default(true),
+    budgetPerRun: integer("budget_per_run").notNull().default(100), // credits
+
+    lastRunAt: timestamp("last_run_at", { withTimezone: true, mode: "string" }),
+    lastRunStatus: text("last_run_status"),
+    nextRunAt: timestamp("next_run_at", { withTimezone: true, mode: "string" }),
+
+    createdAt: timestamp("created_at", { withTimezone: true, mode: "string" })
+      .notNull()
+      .defaultNow(),
+  },
+  (t) => ({
+    userIdx: index("scheduled_work_user_idx").on(t.userId),
+    userEnabledIdx: index("scheduled_work_user_enabled_idx").on(t.userId, t.isEnabled),
+  }),
+);
+
+// ─── Credit Balances ─────────────────────────────────────────
+
+export const creditBalances = pgTable(
+  "credit_balances",
+  {
+    id: uuid("id").primaryKey().defaultRandom(),
+    userId: uuid("user_id")
+      .notNull()
+      .unique()
+      .references(() => users.id, { onDelete: "cascade" }),
+
+    monthlyAllowance: integer("monthly_allowance").notNull().default(10000),
+    monthlyUsed: integer("monthly_used").notNull().default(0),
+    rollover: integer("rollover").notNull().default(0),
+
+    planTier: text("plan_tier").notNull().default("growth"),
+    periodStart: date("period_start").notNull(),
+    periodEnd: date("period_end").notNull(),
+
+    updatedAt: timestamp("updated_at", { withTimezone: true, mode: "string" })
+      .notNull()
+      .defaultNow(),
+  },
+  (t) => ({
+    userIdx: uniqueIndex("credit_balances_user_idx").on(t.userId),
+  }),
+);
+
+// ─── Credit Usage Log ────────────────────────────────────────
+
+export const creditUsageLog = pgTable(
+  "credit_usage_log",
+  {
+    id: uuid("id").primaryKey().defaultRandom(),
+    userId: uuid("user_id")
+      .notNull()
+      .references(() => users.id, { onDelete: "cascade" }),
+    agentRunId: uuid("agent_run_id").references(() => agentRuns.id, {
+      onDelete: "set null",
+    }),
+    employeeSlug: text("employee_slug").notNull(),
+    department: text("department"),
+
+    credits: integer("credits").notNull(),
+    purpose: text("purpose").notNull(), // "task_run" | "evaluation" | "memory_retrieval"
+
+    createdAt: timestamp("created_at", { withTimezone: true, mode: "string" })
+      .notNull()
+      .defaultNow(),
+  },
+  (t) => ({
+    userIdx: index("credit_usage_user_idx").on(t.userId),
+    createdIdx: index("credit_usage_created_idx").on(t.userId, t.createdAt),
+  }),
+);
+
+// ─── Audit Logs ──────────────────────────────────────────────
+
+export const auditLogs = pgTable(
+  "audit_logs",
+  {
+    id: uuid("id").primaryKey().defaultRandom(),
+    userId: uuid("user_id").references(() => users.id, { onDelete: "set null" }),
+    actor: text("actor").notNull().default("user"), // user | ai | system
+    action: auditActionEnum("action").notNull(),
+
+    targetType: text("target_type"), // "company_goal" | "task" | "work_review" | "employee" | ...
+    targetId: text("target_id"),
+
+    metadata: jsonb("metadata").$type<Record<string, unknown>>().default(sql`'{}'::jsonb`),
+    note: text("note"),
+    ipAddress: text("ip_address"),
+
+    createdAt: timestamp("created_at", { withTimezone: true, mode: "string" })
+      .notNull()
+      .defaultNow(),
+  },
+  (t) => ({
+    userIdx: index("audit_logs_user_idx").on(t.userId),
+    actionIdx: index("audit_logs_action_idx").on(t.action),
+    createdIdx: index("audit_logs_created_idx").on(t.createdAt),
+  }),
+);
+
+// ─── Relations ───────────────────────────────────────────────
+
+export const companyMissionsRelations = relations(companyMissions, ({ one, many }) => ({
+  user: one(users, { fields: [companyMissions.userId], references: [users.id] }),
+  goals: many(companyGoals),
+}));
+
+export const companyGoalsRelations = relations(companyGoals, ({ one, many }) => ({
+  user: one(users, { fields: [companyGoals.userId], references: [users.id] }),
+  mission: one(companyMissions, {
+    fields: [companyGoals.missionId],
+    references: [companyMissions.id],
+  }),
+  departmentGoals: many(departmentGoals),
+  workReviewItems: many(workReviewItems),
+  agentRuns: many(agentRuns),
+}));
+
+export const departmentGoalsRelations = relations(departmentGoals, ({ one }) => ({
+  user: one(users, { fields: [departmentGoals.userId], references: [users.id] }),
+  companyGoal: one(companyGoals, {
+    fields: [departmentGoals.companyGoalId],
+    references: [companyGoals.id],
+  }),
+}));
+
+export const workReviewItemsRelations = relations(workReviewItems, ({ one, many }) => ({
+  user: one(users, { fields: [workReviewItems.userId], references: [users.id] }),
+  task: one(tasks, { fields: [workReviewItems.taskId], references: [tasks.id] }),
+  goal: one(companyGoals, {
+    fields: [workReviewItems.goalId],
+    references: [companyGoals.id],
+  }),
+  departmentGoal: one(departmentGoals, {
+    fields: [workReviewItems.departmentGoalId],
+    references: [departmentGoals.id],
+  }),
+  agentRun: one(agentRuns, {
+    fields: [workReviewItems.agentRunId],
+    references: [agentRuns.id],
+  }),
+  hiredAgent: one(hiredAgents, {
+    fields: [workReviewItems.hiredAgentId],
+    references: [hiredAgents.id],
+  }),
+  approvals: many(approvals),
+}));
+
+export const approvalsRelations = relations(approvals, ({ one }) => ({
+  user: one(users, { fields: [approvals.userId], references: [users.id] }),
+  workReviewItem: one(workReviewItems, {
+    fields: [approvals.workReviewItemId],
+    references: [workReviewItems.id],
+  }),
+}));
+
+export const agentRunsRelations = relations(agentRuns, ({ one, many }) => ({
+  user: one(users, { fields: [agentRuns.userId], references: [users.id] }),
+  hiredAgent: one(hiredAgents, {
+    fields: [agentRuns.hiredAgentId],
+    references: [hiredAgents.id],
+  }),
+  task: one(tasks, { fields: [agentRuns.taskId], references: [tasks.id] }),
+  goal: one(companyGoals, {
+    fields: [agentRuns.goalId],
+    references: [companyGoals.id],
+  }),
+  workReviewItem: one(workReviewItems, {
+    fields: [agentRuns.workReviewItemId],
+    references: [workReviewItems.id],
+  }),
+  steps: many(agentRunSteps),
+}));
+
+export const agentRunStepsRelations = relations(agentRunSteps, ({ one }) => ({
+  agentRun: one(agentRuns, {
+    fields: [agentRunSteps.agentRunId],
+    references: [agentRuns.id],
+  }),
+}));
+
+export const knowledgeBaseItemsRelations = relations(knowledgeBaseItems, ({ one }) => ({
+  user: one(users, { fields: [knowledgeBaseItems.userId], references: [users.id] }),
+}));
+
+export const scheduledWorkRelations = relations(scheduledWork, ({ one }) => ({
+  user: one(users, { fields: [scheduledWork.userId], references: [users.id] }),
+  hiredAgent: one(hiredAgents, {
+    fields: [scheduledWork.hiredAgentId],
+    references: [hiredAgents.id],
+  }),
+}));
+
+export const creditBalancesRelations = relations(creditBalances, ({ one }) => ({
+  user: one(users, { fields: [creditBalances.userId], references: [users.id] }),
+}));
+
+export const creditUsageLogRelations = relations(creditUsageLog, ({ one }) => ({
+  user: one(users, { fields: [creditUsageLog.userId], references: [users.id] }),
+  agentRun: one(agentRuns, {
+    fields: [creditUsageLog.agentRunId],
+    references: [agentRuns.id],
+  }),
+}));
+
+export const auditLogsRelations = relations(auditLogs, ({ one }) => ({
+  user: one(users, { fields: [auditLogs.userId], references: [users.id] }),
+}));
+
+// ─── Inferred types (Phase 3) ────────────────────────────────
+
+export type CompanyMission = typeof companyMissions.$inferSelect;
+export type NewCompanyMission = typeof companyMissions.$inferInsert;
+export type CompanyGoal = typeof companyGoals.$inferSelect;
+export type NewCompanyGoal = typeof companyGoals.$inferInsert;
+export type DepartmentGoal = typeof departmentGoals.$inferSelect;
+export type NewDepartmentGoal = typeof departmentGoals.$inferInsert;
+export type WorkReviewItem = typeof workReviewItems.$inferSelect;
+export type NewWorkReviewItem = typeof workReviewItems.$inferInsert;
+export type Approval = typeof approvals.$inferSelect;
+export type NewApproval = typeof approvals.$inferInsert;
+export type AgentRun = typeof agentRuns.$inferSelect;
+export type NewAgentRun = typeof agentRuns.$inferInsert;
+export type AgentRunStep = typeof agentRunSteps.$inferSelect;
+export type NewAgentRunStep = typeof agentRunSteps.$inferInsert;
+export type KnowledgeBaseItem = typeof knowledgeBaseItems.$inferSelect;
+export type NewKnowledgeBaseItem = typeof knowledgeBaseItems.$inferInsert;
+export type ScheduledWork = typeof scheduledWork.$inferSelect;
+export type NewScheduledWork = typeof scheduledWork.$inferInsert;
+export type CreditBalance = typeof creditBalances.$inferSelect;
+export type NewCreditBalance = typeof creditBalances.$inferInsert;
+export type CreditUsageLog = typeof creditUsageLog.$inferSelect;
+export type NewCreditUsageLog = typeof creditUsageLog.$inferInsert;
+export type AuditLog = typeof auditLogs.$inferSelect;
+export type NewAuditLog = typeof auditLogs.$inferInsert;

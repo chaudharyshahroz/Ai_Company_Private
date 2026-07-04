@@ -30,6 +30,18 @@ import {
   MOCK_OFFERS,
   MOCK_GROWTH_ROADMAP,
   MOCK_WEEKLY_TASKS,
+  // Phase 3 — AI Company Engine
+  MOCK_KNOWLEDGE_BASE_ITEMS,
+  MOCK_AGENT_RUNS,
+  MOCK_AGENT_RUN_STEPS,
+  MOCK_WORK_REVIEW_ITEMS,
+  MOCK_AUDIT_LOGS,
+  MOCK_CREDIT_USAGE_LOG,
+  MOCK_COMPANY_MISSIONS,
+  MOCK_COMPANY_GOALS_NEW,
+  MOCK_DEPARTMENT_GOALS,
+  MOCK_SCHEDULED_WORK,
+  MOCK_CREDIT_BALANCES,
 } from "./mock-data";
 import { EMPLOYEES, getEmployee as getEmployeeDef } from "./employees";
 import type {
@@ -363,4 +375,241 @@ export async function getGrowthRoadmap(_userId: string, kind: "launch_7" | "grow
 
 export async function listWeeklyTasks(_userId: string) {
   return MOCK_WEEKLY_TASKS;
+}
+
+// ════════════════════════════════════════════════════════════════
+//  PHASE 3 — AI COMPANY ENGINE ACCESSORS
+// ════════════════════════════════════════════════════════════════
+
+import type {
+  WorkReviewItem,
+  AgentRun,
+  AgentRunStep,
+  KnowledgeBaseItem,
+  AuditLog,
+  CreditUsageLog,
+  ScheduledWork,
+  CompanyMission,
+  CompanyGoal,
+  DepartmentGoal,
+  CreditBalance,
+  Approval,
+} from "@/lib/db/schema";
+
+// ─── Missions ────────────────────────────────────────────────
+
+export async function getMission(userId: string): Promise<CompanyMission | null> {
+  return MOCK_COMPANY_MISSIONS.find((m) => m.userId === userId) ?? null;
+}
+
+// ─── Company Goals ───────────────────────────────────────────
+
+export async function listCompanyGoalsNew(userId: string): Promise<CompanyGoal[]> {
+  return MOCK_COMPANY_GOALS_NEW.filter(
+    (g) => g.userId === userId && g.status !== "archived",
+  ).sort(
+    (a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime(),
+  );
+}
+
+export async function getCompanyGoalNew(goalId: string): Promise<CompanyGoal | null> {
+  return MOCK_COMPANY_GOALS_NEW.find((g) => g.id === goalId) ?? null;
+}
+
+// ─── Department Goals ────────────────────────────────────────
+
+export async function listDepartmentGoals(userId: string): Promise<DepartmentGoal[]> {
+  return MOCK_DEPARTMENT_GOALS.filter((d) => d.userId === userId);
+}
+
+// ─── Work Review ──────────────────────────────────────────────
+
+export async function listWorkReviewItems(
+  userId: string,
+  opts?: {
+    status?: string;
+    kind?: string;
+    department?: string;
+    limit?: number;
+  },
+): Promise<WorkReviewItem[]> {
+  let items = MOCK_WORK_REVIEW_ITEMS.filter((w) => w.userId === userId);
+  if (opts?.status) items = items.filter((w) => w.status === opts.status);
+  if (opts?.kind) items = items.filter((w) => w.kind === opts.kind);
+  if (opts?.department) items = items.filter((w) => w.department === opts.department);
+  items = items.sort(
+    (a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime(),
+  );
+  if (opts?.limit) items = items.slice(0, opts.limit);
+  return items;
+}
+
+export async function getWorkReviewItem(
+  itemId: string,
+): Promise<WorkReviewItem | null> {
+  return MOCK_WORK_REVIEW_ITEMS.find((w) => w.id === itemId) ?? null;
+}
+
+export async function countWorkReviewByStatus(
+  userId: string,
+): Promise<Record<string, number>> {
+  const items = MOCK_WORK_REVIEW_ITEMS.filter((w) => w.userId === userId);
+  const out: Record<string, number> = {
+    needs_approval: 0,
+    ready_to_send: 0,
+    ready_to_publish: 0,
+    ready_to_save: 0,
+    completed: 0,
+    rejected: 0,
+  };
+  for (const item of items) {
+    out[item.status] = (out[item.status] ?? 0) + 1;
+  }
+  return out;
+}
+
+// ─── Agent Runs ──────────────────────────────────────────────
+
+export async function listAgentRuns(
+  userId: string,
+  opts?: {
+    employeeSlug?: string;
+    limit?: number;
+  },
+): Promise<AgentRun[]> {
+  let runs = MOCK_AGENT_RUNS.filter((r) => r.userId === userId);
+  if (opts?.employeeSlug) runs = runs.filter((r) => r.employeeSlug === opts.employeeSlug);
+  runs = runs.sort(
+    (a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime(),
+  );
+  if (opts?.limit) runs = runs.slice(0, opts.limit);
+  return runs;
+}
+
+export async function getAgentRun(runId: string): Promise<AgentRun | null> {
+  return MOCK_AGENT_RUNS.find((r) => r.id === runId) ?? null;
+}
+
+export async function listAgentRunSteps(runId: string): Promise<AgentRunStep[]> {
+  return MOCK_AGENT_RUN_STEPS.filter((s) => s.agentRunId === runId).sort(
+    (a, b) => a.stepIndex - b.stepIndex,
+  );
+}
+
+// ─── Knowledge Base Items (semantic memory) ──────────────────
+
+export async function listKnowledgeBaseItems(
+  userId: string,
+  opts?: { scope?: string; limit?: number },
+): Promise<KnowledgeBaseItem[]> {
+  let items = MOCK_KNOWLEDGE_BASE_ITEMS.filter((k) => k.userId === userId);
+  if (opts?.scope) items = items.filter((k) => k.scope === opts.scope || k.scope === "all");
+  items = items.sort((a, b) => b.useCount - a.useCount);
+  if (opts?.limit) items = items.slice(0, opts.limit);
+  return items;
+}
+
+export async function getKnowledgeBaseItem(
+  itemId: string,
+): Promise<KnowledgeBaseItem | null> {
+  return MOCK_KNOWLEDGE_BASE_ITEMS.find((k) => k.id === itemId) ?? null;
+}
+
+// ─── Scheduled Work ──────────────────────────────────────────
+
+export async function listScheduledWork(
+  userId: string,
+  opts?: { enabledOnly?: boolean },
+): Promise<ScheduledWork[]> {
+  let items = MOCK_SCHEDULED_WORK.filter((s) => s.userId === userId);
+  if (opts?.enabledOnly) items = items.filter((s) => s.isEnabled);
+  return items.sort((a, b) => {
+    if (a.nextRunAt && b.nextRunAt) {
+      return new Date(a.nextRunAt).getTime() - new Date(b.nextRunAt).getTime();
+    }
+    return 0;
+  });
+}
+
+// ─── Credits ─────────────────────────────────────────────────
+
+export async function getCreditBalance(userId: string): Promise<CreditBalance | null> {
+  return MOCK_CREDIT_BALANCES.find((b) => b.userId === userId) ?? null;
+}
+
+export async function listCreditUsage(
+  userId: string,
+  opts?: { limit?: number },
+): Promise<CreditUsageLog[]> {
+  let items = MOCK_CREDIT_USAGE_LOG.filter((u) => u.userId === userId);
+  items = items.sort(
+    (a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime(),
+  );
+  if (opts?.limit) items = items.slice(0, opts.limit);
+  return items;
+}
+
+// ─── Audit Logs ──────────────────────────────────────────────
+
+export async function listAuditLogs(
+  userId: string,
+  opts?: { limit?: number; action?: string },
+): Promise<AuditLog[]> {
+  let items = MOCK_AUDIT_LOGS.filter((l) => l.userId === userId);
+  if (opts?.action) items = items.filter((l) => l.action === opts.action);
+  items = items.sort(
+    (a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime(),
+  );
+  if (opts?.limit) items = items.slice(0, opts.limit);
+  return items;
+}
+
+// ─── Aggregates for HQ dashboard ─────────────────────────────
+
+export async function getCompanyOverview(userId: string) {
+  const [mission, goals, workItems, agentRuns, balance, scheduled] = await Promise.all([
+    getMission(userId),
+    listCompanyGoalsNew(userId),
+    listWorkReviewItems(userId, { status: "needs_approval" }),
+    listAgentRuns(userId, { limit: 50 }),
+    getCreditBalance(userId),
+    listScheduledWork(userId),
+  ]);
+
+  const totalTasksRun = agentRuns.length;
+  const avgQuality =
+    agentRuns.length > 0
+      ? Math.round(
+          agentRuns.reduce((sum, r) => sum + (r.evaluatorResult?.qualityScore ?? 0), 0) /
+            agentRuns.length,
+        )
+      : 0;
+
+  const creditsRemaining =
+    balance !== null ? balance.monthlyAllowance - balance.monthlyUsed : 0;
+
+  return {
+    mission,
+    goals,
+    pendingWorkItems: workItems,
+    scheduledWork: scheduled,
+    metrics: {
+      totalTasksRun,
+      avgQuality,
+      activeGoals: goals.filter((g) => g.status === "active" || g.status === "in_progress").length,
+      completedGoals: goals.filter((g) => g.status === "completed").length,
+      pendingApprovals: workItems.length,
+      activeScheduledWork: scheduled.filter((s) => s.isEnabled).length,
+      creditsRemaining,
+      creditsUsed: balance?.monthlyUsed ?? 0,
+      creditsAllowance: balance?.monthlyAllowance ?? 0,
+    },
+  };
+}
+
+// ─── Approvals (action history) ──────────────────────────────
+
+export async function listApprovalsForItem(itemId: string): Promise<Approval[]> {
+  // No mock approvals table yet — return empty.
+  return [];
 }
