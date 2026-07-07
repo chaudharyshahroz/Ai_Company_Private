@@ -42,6 +42,26 @@ import {
   MOCK_DEPARTMENT_GOALS,
   MOCK_SCHEDULED_WORK,
   MOCK_CREDIT_BALANCES,
+  // 8 New Live Features
+  MOCK_CRM_LEADS,
+  MOCK_COMPETITORS,
+  MOCK_MARKET_REPORTS,
+  MOCK_AD_CAMPAIGNS,
+  MOCK_WEBSITE_PAGES,
+  MOCK_GROWTH_METRICS,
+  MOCK_GROWTH_CHANNELS,
+  MOCK_GROWTH_EXPERIMENTS,
+  MOCK_GROWTH_COMMENTARY,
+  type CrmLead,
+  type CrmStage,
+  type Competitor,
+  type MarketReport,
+  type AdCampaign,
+  type WebsitePage,
+  type GrowthMetric,
+  type GrowthChannel,
+  type GrowthExperiment,
+  type GrowthWeeklyCommentary,
 } from "./mock-data";
 import { EMPLOYEES, getEmployee as getEmployeeDef } from "./employees";
 import type {
@@ -612,4 +632,311 @@ export async function getCompanyOverview(userId: string) {
 export async function listApprovalsForItem(itemId: string): Promise<Approval[]> {
   // No mock approvals table yet — return empty.
   return [];
+}
+
+// ════════════════════════════════════════════════════════════════
+//  8 NEW LIVE FEATURES — Coming Soon → Real
+// ════════════════════════════════════════════════════════════════
+
+// ─── CRM ────────────────────────────────────────────────────
+
+export async function listCrmLeads(_userId: string): Promise<CrmLead[]> {
+  return MOCK_CRM_LEADS;
+}
+
+export async function updateCrmLeadStage(
+  id: string,
+  stage: CrmStage,
+): Promise<CrmLead | null> {
+  const lead = MOCK_CRM_LEADS.find((l) => l.id === id);
+  if (!lead) return null;
+  lead.stage = stage;
+  return lead;
+}
+
+export async function createCrmLead(data: Omit<CrmLead, "id" | "createdAt" | "score"> & { score?: number }): Promise<CrmLead> {
+  const score = data.score ?? Math.min(95, 30 + Math.floor(Math.random() * 60));
+  const lead: CrmLead = {
+    ...data,
+    id: `crm-new-${Date.now()}`,
+    score,
+    createdAt: new Date().toISOString(),
+  };
+  MOCK_CRM_LEADS.unshift(lead);
+  return lead;
+}
+
+export async function deleteCrmLead(id: string): Promise<boolean> {
+  const idx = MOCK_CRM_LEADS.findIndex((l) => l.id === id);
+  if (idx < 0) return false;
+  MOCK_CRM_LEADS.splice(idx, 1);
+  return true;
+}
+
+// ─── Competitors ───────────────────────────────────────────
+
+export async function listCompetitors(_userId: string): Promise<Competitor[]> {
+  return MOCK_COMPETITORS;
+}
+
+export async function createCompetitor(
+  data: Omit<Competitor, "id" | "createdAt">,
+): Promise<Competitor> {
+  const comp: Competitor = {
+    ...data,
+    id: `comp-new-${Date.now()}`,
+    createdAt: new Date().toISOString(),
+  };
+  MOCK_COMPETITORS.push(comp);
+  return comp;
+}
+
+export async function deleteCompetitor(id: string): Promise<boolean> {
+  const idx = MOCK_COMPETITORS.findIndex((c) => c.id === id);
+  if (idx < 0) return false;
+  MOCK_COMPETITORS.splice(idx, 1);
+  return true;
+}
+
+// ─── Market Research ───────────────────────────────────────
+
+export async function listMarketReports(_userId: string): Promise<MarketReport[]> {
+  return MOCK_MARKET_REPORTS;
+}
+
+export async function getMarketReport(id: string): Promise<MarketReport | null> {
+  return MOCK_MARKET_REPORTS.find((r) => r.id === id) ?? null;
+}
+
+export async function createMarketReport(
+  data: Omit<MarketReport, "id" | "createdAt" | "status" | "generatedAt" | "marketSize" | "growthRate" | "trends" | "segments" | "demandSignals" | "gaps" | "recommendation" | "risks">,
+): Promise<MarketReport> {
+  // Demo: synthesize a believable report from the topic.
+  const topic = data.topic;
+  const report: MarketReport = {
+    ...data,
+    id: `mr-new-${Date.now()}`,
+    status: "ready",
+    generatedAt: new Date().toISOString(),
+    marketSize: `$1.2B – $4.8B (estimated ${data.region || "global"} market)`,
+    growthRate: "8-15% CAGR (next 3-5 years)",
+    trends: [
+      `AI-native ${topic.toLowerCase()} replacing legacy workflows`,
+      `Buyer expectations shifting toward "always-on" experiences`,
+      `Consolidation: 3-5 tool stacks merging into 1 unified platform`,
+      `Vertical specialization beating horizontal breadth`,
+    ],
+    segments: [
+      { name: "SMB (1-50 employees)", share: "52%", note: "Largest segment, price-sensitive, needs turnkey" },
+      { name: "Mid-market (50-500)", share: "31%", note: "Fastest growing, willing to pay for outcomes" },
+      { name: "Enterprise (500+)", share: "17%", note: "Slower adoption, high ACV" },
+    ],
+    demandSignals: [
+      `Search volume for "${topic}" up 40-60% YoY`,
+      `${Math.floor(Math.random() * 200 + 100)}+ new software products launched in this category in 2025`,
+      `Average buyer reports 2.3x faster ROI than last year's tools`,
+    ],
+    gaps: [
+      "Most solutions force buyers to bolt 3-4 tools together",
+      "AI features exist as add-ons, not as the core product",
+      "Onboarding and integration still take 30+ days industry-wide",
+    ],
+    recommendation: `Lead with the 30-day outcome guarantee. Sell the result, not the tool. Win the mid-market segment first — they have budget and they buy fast.`,
+    risks: [
+      { risk: "Incumbents add AI features", mitigation: "Move fast on specialization + integration depth" },
+      { risk: "Buyer fatigue from AI hype", mitigation: "Lead with case studies, not features" },
+    ],
+    createdAt: new Date().toISOString(),
+  };
+  MOCK_MARKET_REPORTS.unshift(report);
+  return report;
+}
+
+// ─── Ads & Content ─────────────────────────────────────────
+
+export async function listAdCampaigns(_userId: string): Promise<AdCampaign[]> {
+  return MOCK_AD_CAMPAIGNS;
+}
+
+export async function getAdCampaign(id: string): Promise<AdCampaign | null> {
+  return MOCK_AD_CAMPAIGNS.find((c) => c.id === id) ?? null;
+}
+
+export async function createAdCampaign(
+  data: Pick<AdCampaign, "name" | "type" | "channel" | "goal" | "audience" | "hook" | "cta">,
+): Promise<AdCampaign> {
+  // Demo: synthesize a content calendar based on the type.
+  const postsByType: Record<AdCampaign["type"], number> = {
+    "7-day-launch": 7,
+    "14-day-lead-gen": 14,
+    "30-day-content": 30,
+    "social-posts": 10,
+    "email-sequence": 5,
+    "paid-ads": 6,
+  };
+  const count = postsByType[data.type] ?? 7;
+  const content = Array.from({ length: count }).map((_, i) => ({
+    id: `ad-c-new-${Date.now()}-${i}`,
+    day: i + 1,
+    platform: data.channel,
+    format: data.type === "email-sequence" ? "Cold email" : data.type === "paid-ads" ? "Ad copy" : "Social post",
+    hook: data.hook,
+    body: `Day ${i + 1} content for "${data.name}" — auto-generated by your AI Marketing Strategist from your offer and audience. ${data.goal}.`,
+    cta: data.cta,
+    status: "draft" as const,
+  }));
+  const campaign: AdCampaign = {
+    id: `ad-new-${Date.now()}`,
+    userId: DEMO_USER.id,
+    name: data.name,
+    type: data.type,
+    channel: data.channel,
+    status: "draft",
+    goal: data.goal,
+    audience: data.audience,
+    hook: data.hook,
+    cta: data.cta,
+    postsCount: count,
+    leads: 0,
+    conversions: 0,
+    budget: 0,
+    startedAt: null,
+    createdAt: new Date().toISOString(),
+    content,
+  };
+  MOCK_AD_CAMPAIGNS.unshift(campaign);
+  return campaign;
+}
+
+export async function updateAdCampaignStatus(id: string, status: AdCampaign["status"]): Promise<AdCampaign | null> {
+  const c = MOCK_AD_CAMPAIGNS.find((x) => x.id === id);
+  if (!c) return null;
+  c.status = status;
+  if (status === "running" && !c.startedAt) c.startedAt = new Date().toISOString().slice(0, 10);
+  return c;
+}
+
+export async function deleteAdCampaign(id: string): Promise<boolean> {
+  const idx = MOCK_AD_CAMPAIGNS.findIndex((c) => c.id === id);
+  if (idx < 0) return false;
+  MOCK_AD_CAMPAIGNS.splice(idx, 1);
+  return true;
+}
+
+// ─── Website Builder ──────────────────────────────────────
+
+export async function listWebsitePages(_userId: string): Promise<WebsitePage[]> {
+  return MOCK_WEBSITE_PAGES;
+}
+
+export async function getWebsitePage(id: string): Promise<WebsitePage | null> {
+  return MOCK_WEBSITE_PAGES.find((p) => p.id === id) ?? null;
+}
+
+export async function createWebsitePage(
+  data: Pick<WebsitePage, "name" | "type" | "goal" | "tone" | "targetAudience">,
+): Promise<WebsitePage> {
+  const page: WebsitePage = {
+    id: `wp-new-${Date.now()}`,
+    userId: DEMO_USER.id,
+    name: data.name,
+    slug: `/${data.name.toLowerCase().replace(/[^a-z0-9]+/g, "-").replace(/^-|-$/g, "")}`,
+    type: data.type,
+    status: "ready",
+    goal: data.goal,
+    tone: data.tone,
+    targetAudience: data.targetAudience,
+    hero: {
+      headline: `Stop ${data.goal.toLowerCase()} the hard way.`,
+      subhead: `${data.targetAudience} trust us to ${data.goal.toLowerCase()} — in 14 days, no code.`,
+      cta: "Get started",
+    },
+    problem: {
+      title: `You're losing time and money.`,
+      points: [
+        `Manual work is eating your week`,
+        `Your tools don't talk to each other`,
+        `You can't scale without hiring`,
+        `You know AI can help — you just don't know where to start`,
+      ],
+    },
+    solution: {
+      title: `AI that ships work, not just suggestions.`,
+      points: [
+        `Hire an AI team in 14 days`,
+        `Sales, marketing, content, support, research — all working 24/7`,
+        `All output reviewed and approved by you before it goes out`,
+        `Built for ${data.targetAudience.toLowerCase()}`,
+      ],
+    },
+    features: [
+      { title: "24/7 execution", description: `Your AI team works while you sleep. They don't stop.` },
+      { title: "Built-in quality", description: "Every output is reviewed and approved before it ships." },
+      { title: "Multi-department", description: "Sales, marketing, content, support, research, ops — coordinated." },
+      { title: "Pay per outcome", description: "Flat monthly pricing. No per-seat surprises." },
+    ],
+    socialProof: [
+      { quote: "We replaced 3 contractors with 1 AI team. Same output, 1/10th the cost.", author: "Sarah K.", company: "Bright Smile Dental" },
+      { quote: "It actually does the work. That's the difference.", author: "Marcus W.", company: "Wright Realty" },
+    ],
+    pricing: [
+      { tier: "Starter", price: "$29/mo", features: ["1 AI employee", "500 tasks/mo", "Email support"] },
+      { tier: "Growth", price: "$79/mo", features: ["5 AI employees", "5,000 tasks/mo", "Priority support"] },
+      { tier: "Company", price: "$149/mo", features: ["10 AI employees", "Unlimited tasks", "Dedicated CSM"] },
+    ],
+    faq: [
+      { q: "How fast can I get started?", a: "Most teams are live in 14 days." },
+      { q: "What if I don't like an output?", a: "Edit it or regenerate. The AI learns from your edits." },
+      { q: "Can I cancel anytime?", a: "Yes. No contracts." },
+    ],
+    cta: { headline: `Ready to ${data.goal.toLowerCase()}?`, cta: "Get started" },
+    seo: {
+      title: `${data.name} — AI for ${data.targetAudience}`,
+      description: `${data.goal} in 14 days with your own AI team. Built for ${data.targetAudience.toLowerCase()}.`,
+    },
+    createdAt: new Date().toISOString(),
+  };
+  MOCK_WEBSITE_PAGES.unshift(page);
+  return page;
+}
+
+export async function deleteWebsitePage(id: string): Promise<boolean> {
+  const idx = MOCK_WEBSITE_PAGES.findIndex((p) => p.id === id);
+  if (idx < 0) return false;
+  MOCK_WEBSITE_PAGES.splice(idx, 1);
+  return true;
+}
+
+// ─── Growth Command Center ────────────────────────────────
+
+export async function listGrowthMetrics(_userId: string): Promise<GrowthMetric[]> {
+  return MOCK_GROWTH_METRICS;
+}
+
+export async function listGrowthChannels(_userId: string): Promise<GrowthChannel[]> {
+  return MOCK_GROWTH_CHANNELS;
+}
+
+export async function listGrowthExperiments(_userId: string): Promise<GrowthExperiment[]> {
+  return MOCK_GROWTH_EXPERIMENTS;
+}
+
+export async function listGrowthCommentary(_userId: string): Promise<GrowthWeeklyCommentary[]> {
+  return MOCK_GROWTH_COMMENTARY;
+}
+
+export async function getLatestGrowthCommentary(_userId: string): Promise<GrowthWeeklyCommentary | null> {
+  return MOCK_GROWTH_COMMENTARY[0] ?? null;
+}
+
+// ─── Weekly Tasks (extra accessors) ───────────────────────
+
+export async function updateWeeklyTaskStatus(
+  id: string,
+  status: "todo" | "in_progress" | "done" | "skipped",
+): Promise<boolean> {
+  const t = MOCK_WEEKLY_TASKS.find((x) => x.id === id);
+  if (!t) return false;
+  t.status = status;
+  return true;
 }

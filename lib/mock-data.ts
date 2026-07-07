@@ -2570,3 +2570,738 @@ export const MOCK_SCHEDULED_WORK: ScheduledWork[] = [
     createdAt: "2026-05-01T09:00:00Z",
   },
 ];
+
+// ════════════════════════════════════════════════════════════════
+//  8 NEW LIVE FEATURES — Coming Soon → Real
+// ════════════════════════════════════════════════════════════════
+
+// ─── CRM (Pipeline) ────────────────────────────────────────
+// Pipeline stages for the full CRM kanban. Different from the Lead
+// System's "intent" — CRM tracks the relationship lifecycle.
+
+export type CrmStage =
+  | "new"
+  | "contacted"
+  | "interested"
+  | "meeting"
+  | "won"
+  | "lost";
+
+export interface CrmLead {
+  id: string;
+  userId: string;
+  name: string;
+  email: string;
+  company: string;
+  phone: string;
+  source: string;
+  stage: CrmStage;
+  /** AI lead score 0-100 — higher = more likely to close. */
+  score: number;
+  interest: string;
+  lastContact: string; // ISO date
+  nextAction: string;
+  nextActionDate: string; // ISO date
+  notes: string;
+  createdAt: string;
+}
+
+export const MOCK_CRM_LEADS: CrmLead[] = [
+  {
+    id: "crm-1",
+    userId: DEMO_USER.id,
+    name: "Maya Chen",
+    email: "maya@tidepool.app",
+    company: "Tidepool",
+    phone: "+1 415-555-0102",
+    source: "LinkedIn",
+    stage: "interested",
+    score: 88,
+    interest: "AI sales team for SaaS",
+    lastContact: "2026-06-22",
+    nextAction: "Send case study + book demo",
+    nextActionDate: "2026-06-25",
+    notes: "Asked about pricing twice. Ready for a 30-min call this week.",
+    createdAt: "2026-06-08T10:00:00Z",
+  },
+  {
+    id: "crm-2",
+    userId: DEMO_USER.id,
+    name: "Jordan Patel",
+    email: "jordan@loophole.dev",
+    company: "Loophole Labs",
+    phone: "+1 510-555-0144",
+    source: "Website Widget",
+    stage: "meeting",
+    score: 92,
+    interest: "Support widget + lead capture",
+    lastContact: "2026-06-23",
+    nextAction: "Discovery call at 2pm Tue",
+    nextActionDate: "2026-06-25",
+    notes: "Demo done. Loved the support widget. Evaluating Pro plan.",
+    createdAt: "2026-06-12T14:30:00Z",
+  },
+  {
+    id: "crm-3",
+    userId: DEMO_USER.id,
+    name: "Sam Rivera",
+    email: "sam@quiver.io",
+    company: "Quiver",
+    phone: "+1 323-555-0118",
+    source: "Cold email",
+    stage: "contacted",
+    score: 61,
+    interest: "Full AI company",
+    lastContact: "2026-06-20",
+    nextAction: "Reply with case studies",
+    nextActionDate: "2026-06-24",
+    notes: "Opened 3 emails. Replied once asking for case studies.",
+    createdAt: "2026-06-15T09:00:00Z",
+  },
+  {
+    id: "crm-4",
+    userId: DEMO_USER.id,
+    name: "Lena Park",
+    email: "lena@lucent.co",
+    company: "Lucent",
+    phone: "+1 212-555-0166",
+    source: "Referral",
+    stage: "interested",
+    score: 79,
+    interest: "Marketing team only",
+    lastContact: "2026-06-19",
+    nextAction: "Share Marketing team plan",
+    nextActionDate: "2026-06-25",
+    notes: "Referred by Sam Rivera. Wants the marketing dept only.",
+    createdAt: "2026-06-19T09:00:00Z",
+  },
+  {
+    id: "crm-5",
+    userId: DEMO_USER.id,
+    name: "Tom Wright",
+    email: "tom@bootscats.com",
+    company: "Boots & Cats",
+    phone: "+1 415-555-0199",
+    source: "Demo request",
+    stage: "new",
+    score: 54,
+    interest: "Agency plan",
+    lastContact: "2026-06-23",
+    nextAction: "Send intro deck + schedule demo",
+    nextActionDate: "2026-06-24",
+    notes: "Requested demo via website. Runs an agency. Likely needs white-label.",
+    createdAt: "2026-06-23T15:20:00Z",
+  },
+  {
+    id: "crm-6",
+    userId: DEMO_USER.id,
+    name: "Aisha Patel",
+    email: "aisha@stitchwork.dev",
+    company: "Stitchwork",
+    phone: "+1 617-555-0123",
+    source: "Cold email",
+    stage: "won",
+    score: 96,
+    interest: "Growth plan",
+    lastContact: "2026-06-15",
+    nextAction: "Onboarding kickoff",
+    nextActionDate: "2026-06-16",
+    notes: "Closed. Signed up for Growth. Onboarding sent.",
+    createdAt: "2026-06-02T11:00:00Z",
+  },
+  {
+    id: "crm-7",
+    userId: DEMO_USER.id,
+    name: "Marcus Johnson",
+    email: "marcus@growthstack.io",
+    company: "GrowthStack",
+    phone: "+1 305-555-0145",
+    source: "LinkedIn",
+    stage: "lost",
+    score: 22,
+    interest: "Custom plan",
+    lastContact: "2026-06-12",
+    nextAction: "Archive after 30 days",
+    nextActionDate: "2026-07-12",
+    notes: "Went with competitor. Reason: too expensive. Try again in 90 days.",
+    createdAt: "2026-06-01T10:00:00Z",
+  },
+  {
+    id: "crm-8",
+    userId: DEMO_USER.id,
+    name: "Priya Sharma",
+    email: "priya@nimbleops.io",
+    company: "NimbleOps",
+    phone: "+1 415-555-0177",
+    source: "LinkedIn",
+    stage: "new",
+    score: 47,
+    interest: "Operations team",
+    lastContact: "2026-06-23",
+    nextAction: "Send intro + ROI calculator",
+    nextActionDate: "2026-06-25",
+    notes: "Commented on a LinkedIn post. Asked for ROI numbers.",
+    createdAt: "2026-06-23T16:00:00Z",
+  },
+  {
+    id: "crm-9",
+    userId: DEMO_USER.id,
+    name: "Diego Lopez",
+    email: "diego@helio.studio",
+    company: "Helio Studio",
+    phone: "+1 213-555-0188",
+    source: "Website Widget",
+    stage: "contacted",
+    score: 58,
+    interest: "Content + social team",
+    lastContact: "2026-06-22",
+    nextAction: "Reply with sample content",
+    nextActionDate: "2026-06-24",
+    notes: "Wants a sample of generated content for his niche (architecture).",
+    createdAt: "2026-06-21T13:00:00Z",
+  },
+  {
+    id: "crm-10",
+    userId: DEMO_USER.id,
+    name: "Yuki Tanaka",
+    email: "yuki@pixelflow.app",
+    company: "PixelFlow",
+    phone: "+1 206-555-0123",
+    source: "Referral",
+    stage: "interested",
+    score: 83,
+    interest: "Full AI company",
+    lastContact: "2026-06-23",
+    nextAction: "Book strategy call",
+    nextActionDate: "2026-06-26",
+    notes: "Referred by Aisha. Wants to evaluate replacing an in-house VA team.",
+    createdAt: "2026-06-18T15:00:00Z",
+  },
+];
+
+// ─── Competitors ───────────────────────────────────────────
+
+export interface Competitor {
+  id: string;
+  userId: string;
+  name: string;
+  website: string;
+  positioning: string;
+  pricing: string;
+  strengths: string[];
+  weaknesses: string[];
+  gap: string;
+  howToBeat: string;
+  copiedMoves: string[];
+  doBetter: string[];
+  status: "watching" | "beating" | "lost-to" | "won-against";
+  createdAt: string;
+}
+
+export const MOCK_COMPETITORS: Competitor[] = [
+  {
+    id: "comp-1",
+    userId: DEMO_USER.id,
+    name: "Linear",
+    website: "linear.app",
+    positioning: "Issue tracking for high-velocity product teams. Fast, minimal, keyboard-first.",
+    pricing: "$8/user/mo (Free for ≤10 members)",
+    strengths: [
+      "Best-in-class speed and UX",
+      "Strong product team brand",
+      "Excellent keyboard shortcuts",
+    ],
+    weaknesses: [
+      "No AI employees / automation",
+      "Pure project mgmt, not a business OS",
+      "No built-in CRM or marketing",
+    ],
+    gap: "No business execution layer. They track work, they don't do it.",
+    howToBeat: "Position Reklu as 'not just where work lives, but who does the work'. AI employees that close the loop Linear can't.",
+    copiedMoves: ["Keyboard-first design", "Fast, minimal UI"],
+    doBetter: ["AI that actually executes", "Cross-department coordination", "Built-in sales + marketing"],
+    status: "watching",
+    createdAt: "2026-06-20T10:00:00Z",
+  },
+  {
+    id: "comp-2",
+    userId: DEMO_USER.id,
+    name: "ClickUp",
+    website: "clickup.com",
+    positioning: "All-in-one productivity platform. Tasks, docs, chat, goals, whiteboards.",
+    pricing: "$7-$12/user/mo",
+    strengths: ["Feature breadth", "Affordable", "Strong templates marketplace"],
+    weaknesses: [
+      "Bloated — too many features, slow UX",
+      "AI features are basic",
+      "Users complain about reliability",
+    ],
+    gap: "They bolt on AI as a feature. We are AI-first, with departments.",
+    howToBeat: "Win on speed + AI depth. Their UI is heavy. Show 'clean + smart'.",
+    copiedMoves: ["All-in-one positioning"],
+    doBetter: ["AI as a teammate, not a feature", "10x faster UI", "Real automation that ships work"],
+    status: "watching",
+    createdAt: "2026-06-21T10:00:00Z",
+  },
+  {
+    id: "comp-3",
+    userId: DEMO_USER.id,
+    name: "Notion AI",
+    website: "notion.so/product/ai",
+    positioning: "AI inside Notion docs. Q&A, summaries, content generation.",
+    pricing: "$10/user/mo add-on",
+    strengths: ["Huge user base", "AI lives where docs already are", "Strong brand"],
+    weaknesses: [
+      "AI is passive — only answers when asked",
+      "Can't execute work, only write",
+      "No sales/marketing/support skills",
+    ],
+    gap: "Notion AI writes things. Reklu does things. That's the entire gap.",
+    howToBeat: "Show 'AI that ships a campaign' vs 'AI that writes a doc'. Demo matters more than copy.",
+    copiedMoves: ["Clean doc-style UI", "AI-as-collaborator framing"],
+    doBetter: ["Execution, not just generation", "Specialized employees", "Multi-department workflows"],
+    status: "beating",
+    createdAt: "2026-06-22T10:00:00Z",
+  },
+  {
+    id: "comp-4",
+    userId: DEMO_USER.id,
+    name: "Jasper",
+    website: "jasper.ai",
+    positioning: "AI marketing copywriter for blogs, ads, social, email.",
+    pricing: "$49-$125/mo",
+    strengths: ["Marketing-specific templates", "Brand voice training", "Large content team adoption"],
+    weaknesses: [
+      "Marketing-only — no sales, no support, no ops",
+      "Generic outputs if you don't tune",
+      "No real workflow / approval system",
+    ],
+    gap: "Jasper writes copy. We run the marketing department.",
+    howToBeat: "Position as 'your marketing team' vs 'your copy tool'. Show campaign execution end-to-end.",
+    copiedMoves: ["Brand voice memory", "Marketing-specific templates"],
+    doBetter: ["Multi-step campaigns", "Distribution (not just writing)", "Cross-department coordination"],
+    status: "watching",
+    createdAt: "2026-06-22T14:00:00Z",
+  },
+];
+
+// ─── Market Research Reports ───────────────────────────────
+
+export interface MarketReport {
+  id: string;
+  userId: string;
+  topic: string;
+  region: string;
+  depth: "quick" | "standard" | "deep";
+  status: "generating" | "ready" | "stale";
+  generatedAt: string;
+  marketSize: string;
+  growthRate: string;
+  trends: string[];
+  segments: { name: string; share: string; note: string }[];
+  demandSignals: string[];
+  gaps: string[];
+  recommendation: string;
+  risks: { risk: string; mitigation: string }[];
+  createdAt: string;
+}
+
+export const MOCK_MARKET_REPORTS: MarketReport[] = [
+  {
+    id: "mr-1",
+    userId: DEMO_USER.id,
+    topic: "AI-powered websites for local service businesses",
+    region: "United States (Tier-1 cities)",
+    depth: "standard",
+    status: "ready",
+    generatedAt: "2026-06-22T14:00:00Z",
+    marketSize: "$4.8B (US web design + local lead capture)",
+    growthRate: "11.2% CAGR (2025-2030)",
+    trends: [
+      "AI-first web design replacing template-based builders",
+      "WhatsApp Business becoming primary post-website channel",
+      "Local SEO + Google Business Profile as one workflow",
+      "Lead-response time as the #1 conversion lever",
+    ],
+    segments: [
+      { name: "Dental & medical clinics", share: "32%", note: "High LTV, urgent inquiries, after-hours pain" },
+      { name: "Real estate agents", share: "24%", note: "Lead volume matters; speed-to-lead is everything" },
+      { name: "Law firms", share: "14%", note: "Premium pricing, brand-sensitive" },
+      { name: "Home services (HVAC, plumbers)", share: "20%", note: "Mobile-first, call-driven" },
+      { name: "Other local services", share: "10%", note: "Boutique spas, salons, personal services" },
+    ],
+    demandSignals: [
+      "Google searches for 'after-hours answering service' up 38% YoY",
+      "Local businesses now spend $2.3B/yr on lead-response tools",
+      "41% of small biz owners say 'missed leads' is their #1 growth problem (2025 SBA survey)",
+    ],
+    gaps: [
+      "No one owns the full 'website + lead-capture + follow-up' stack for local",
+      "Existing solutions force SMBs to bolt together 3-4 tools",
+      "AI lead-response tools exist but no one ships them as a service",
+    ],
+    recommendation:
+      "Own the 'AI website that works 24/7' positioning. Sell outcomes (booked appointments), not deliverables. Win dental + real estate first — both have urgent, high-LTV inquiries and clear ROI math.",
+    risks: [
+      { risk: "Big agencies (GoDaddy, Wix) launch similar AI features", mitigation: "Move fast on specialization + integration; win on depth, not breadth" },
+      { risk: "Local businesses churn fast if results don't show in 30 days", mitigation: "Front-load a 'first booked appointment in 14 days' guarantee" },
+      { risk: "AI quality dips on niche verticals", mitigation: "Build vertical-specific prompt templates (dental, real estate, legal)" },
+    ],
+    createdAt: "2026-06-22T14:00:00Z",
+  },
+  {
+    id: "mr-2",
+    userId: DEMO_USER.id,
+    topic: "AI sales agents for SaaS",
+    region: "Global (English-speaking)",
+    depth: "deep",
+    status: "ready",
+    generatedAt: "2026-06-15T11:00:00Z",
+    marketSize: "$1.9B (AI sales tooling, 2026)",
+    growthRate: "23% CAGR (fastest segment in sales tech)",
+    trends: [
+      "Outbound 2.0: AI handles research + first-touch + follow-up",
+      "Buying signals over cold lists (intent data, social activity)",
+      "Sales reps becoming AI managers, not senders",
+    ],
+    segments: [
+      { name: "SMB SaaS (10-100 employees)", share: "58%", note: "No SDR team, needs AI to scale outreach" },
+      { name: "Mid-market SaaS", share: "30%", note: "Has SDRs, wants AI to multiply them" },
+      { name: "Enterprise", share: "12%", note: "Compliance-heavy, slower adoption" },
+    ],
+    demandSignals: [
+      "AI SDR companies raised $480M in 2025",
+      "Average SDR salary now $85k — AI replaces 60-70% of tasks",
+      "Cold email reply rates up 2.3x with AI personalization",
+    ],
+    gaps: [
+      "Most AI sales tools focus on one channel (email only)",
+      "Compliance and deliverability are afterthoughts",
+      "No good 'AI SDR + AI closer' bundle",
+    ],
+    recommendation:
+      "Differentiate on multi-channel (email + LinkedIn + WhatsApp) and a built-in closer agent. Compliance-first posture wins mid-market.",
+    risks: [
+      { risk: "Incumbents add AI features", mitigation: "Move fast on specialization + integration depth" },
+      { risk: "Buyer fatigue from AI hype", mitigation: "Lead with case studies, not features" },
+    ],
+    createdAt: "2026-06-22T14:00:00Z",
+  },
+];
+
+// ─── Ads & Content Campaigns ───────────────────────────────
+
+export interface AdCampaign {
+  id: string;
+  userId: string;
+  name: string;
+  type: "7-day-launch" | "14-day-lead-gen" | "30-day-content" | "social-posts" | "email-sequence" | "paid-ads";
+  channel: "LinkedIn" | "Facebook" | "Instagram" | "X" | "TikTok" | "YouTube" | "Email" | "WhatsApp" | "Multi";
+  status: "draft" | "running" | "paused" | "done";
+  goal: string;
+  audience: string;
+  hook: string;
+  cta: string;
+  postsCount: number;
+  leads: number;
+  conversions: number;
+  budget: number;
+  startedAt: string | null;
+  createdAt: string;
+  /** Generated content snippets — populated when the campaign is generated. */
+  content: AdCampaignContent[];
+}
+
+export interface AdCampaignContent {
+  id: string;
+  day: number;
+  platform: string;
+  format: string;
+  hook: string;
+  body: string;
+  cta: string;
+  status: "draft" | "approved" | "scheduled" | "published";
+}
+
+export const MOCK_AD_CAMPAIGNS: AdCampaign[] = [
+  {
+    id: "ad-1",
+    userId: DEMO_USER.id,
+    name: "Q3 Founder Push — LinkedIn",
+    type: "14-day-lead-gen",
+    channel: "LinkedIn",
+    status: "running",
+    goal: "Generate 50 qualified demos from SaaS founders",
+    audience: "SaaS founders, 10-100 employees, US/EU",
+    hook: "Your AI company, working 24/7",
+    cta: "Book a 15-min demo",
+    postsCount: 14,
+    leads: 142,
+    conversions: 18,
+    budget: 1200,
+    startedAt: "2026-06-01",
+    createdAt: "2026-05-28T10:00:00Z",
+    content: [
+      {
+        id: "ad-c-1-1",
+        day: 1,
+        platform: "LinkedIn",
+        format: "Text post",
+        hook: "Most businesses don't have a productivity problem.",
+        body: "They have an execution problem. There are 1,000 things to do this week and 3 of you. That's why we built an AI company. Not an AI tool — an actual team. Sales, marketing, support, content, research. Hired like employees. Managed by an AI CEO. Shipping while you sleep.",
+        cta: "Link in comments.",
+        status: "published",
+      },
+      {
+        id: "ad-c-1-2",
+        day: 2,
+        platform: "LinkedIn",
+        format: "Text post",
+        hook: "I used to do all my own sales outreach. 8 hours a day.",
+        body: "Then I hired an AI closer. It sends 50 personalized DMs a day, qualifies replies, and books meetings on my calendar. Now I close 3 demos a week from warm leads. The AI is $49/mo. The closest human SDR is $7k/mo. I sold the human one.",
+        cta: "DM 'AI TEAM' to see how it works.",
+        status: "published",
+      },
+    ],
+  },
+  {
+    id: "ad-2",
+    userId: DEMO_USER.id,
+    name: "Cold Email — 5-step sequence",
+    type: "email-sequence",
+    channel: "Email",
+    status: "running",
+    goal: "Book 30 sales calls from cold SaaS founders",
+    audience: "SaaS founders, 10-100 employees, US/EU",
+    hook: "Your AI company in 14 days",
+    cta: "Reply with 'demo'",
+    postsCount: 5,
+    leads: 412,
+    conversions: 47,
+    budget: 0,
+    startedAt: "2026-05-15",
+    createdAt: "2026-05-12T10:00:00Z",
+    content: [
+      {
+        id: "ad-c-2-1",
+        day: 1,
+        platform: "Email",
+        format: "Cold email",
+        hook: "{{firstName}}, I built an AI company. Want to see it?",
+        body: "Hey {{firstName}},\n\nQuick one — I run a 5-person team that's entirely AI. Sales, marketing, content, research, ops. They work 24/7. The whole company costs $79/mo.\n\nWe just hit 1,000 paying teams. Most of them replaced a VA or an SDR.\n\nWorth 15 min to see if it fits {{company}}?\n\n— Atlas (the AI CEO)",
+        cta: "Book a 15-min demo",
+        status: "published",
+      },
+    ],
+  },
+  {
+    id: "ad-3",
+    userId: DEMO_USER.id,
+    name: "30-Day Content Calendar",
+    type: "30-day-content",
+    channel: "Multi",
+    status: "draft",
+    goal: "Build top-of-funnel awareness",
+    audience: "SaaS founders + small business owners",
+    hook: "How to run a 1-person company with 10 AI employees",
+    cta: "Follow for daily tactics",
+    postsCount: 30,
+    leads: 0,
+    conversions: 0,
+    budget: 0,
+    startedAt: null,
+    createdAt: "2026-06-23T10:00:00Z",
+    content: [],
+  },
+];
+
+// ─── Website Builder ──────────────────────────────────────
+
+export interface WebsitePage {
+  id: string;
+  userId: string;
+  name: string;
+  slug: string;
+  type: "landing" | "long-form-sales" | "waitlist" | "pricing" | "about";
+  status: "draft" | "ready" | "published";
+  goal: string;
+  tone: string;
+  targetAudience: string;
+  hero: { headline: string; subhead: string; cta: string };
+  problem: { title: string; points: string[] };
+  solution: { title: string; points: string[] };
+  features: { title: string; description: string }[];
+  socialProof: { quote: string; author: string; company: string }[];
+  pricing: { tier: string; price: string; features: string[] }[];
+  faq: { q: string; a: string }[];
+  cta: { headline: string; cta: string };
+  seo: { title: string; description: string };
+  createdAt: string;
+}
+
+export const MOCK_WEBSITE_PAGES: WebsitePage[] = [
+  {
+    id: "wp-1",
+    userId: DEMO_USER.id,
+    name: "Acme AI Studios — Main landing",
+    slug: "/",
+    type: "landing",
+    status: "ready",
+    goal: "Get local service business owners to book a 15-min demo",
+    tone: "Bold, modern, outcome-focused",
+    targetAudience: "Local service business owners in US Tier-1 cities, $500k-$5M revenue",
+    hero: {
+      headline: "Stop missing leads after 5pm.",
+      subhead: "An AI website that books appointments 24/7 — built for local service businesses in 14 days.",
+      cta: "Book a 15-min demo",
+    },
+    problem: {
+      title: "You're losing 40% of your leads.",
+      points: [
+        "Calls and form submissions pile up overnight",
+        "By morning, those leads have called your competitor",
+        "You're spending on ads but can't tie them to booked jobs",
+        "Your website is a digital brochure, not a 24/7 sales rep",
+      ],
+    },
+    solution: {
+      title: "An AI website that works while you sleep.",
+      points: [
+        "AI answers leads in under 60 seconds — on your website, WhatsApp, or SMS",
+        "Books appointments straight on your calendar",
+        "Speaks in your brand voice (not generic chatbot)",
+        "Set up in 14 days, no code",
+      ],
+    },
+    features: [
+      { title: "24/7 lead response", description: "AI answers every form, call, and WhatsApp message in under 60 seconds." },
+      { title: "Calendar booking", description: "Qualified leads book themselves onto your calendar. No back-and-forth." },
+      { title: "WhatsApp + SMS", description: "Reach leads on the channels they actually use." },
+      { title: "Built-in analytics", description: "See every conversation, every booking, every dollar." },
+    ],
+    socialProof: [
+      { quote: "We went from 12 leads/week to 47. The AI booked $34k of new jobs in month one.", author: "Dr. Lisa Chen", company: "Bright Smile Dental" },
+      { quote: "It's like having a receptionist who never sleeps and never complains.", author: "Marcus Wright", company: "Wright Realty Group" },
+    ],
+    pricing: [
+      { tier: "Setup", price: "$1,500 - $3,500", features: ["14-day build", "Custom AI trained on your business", "Calendar + CRM integration"] },
+      { tier: "Monthly", price: "$299/mo", features: ["24/7 lead response", "Unlimited conversations", "Monthly optimization"] },
+    ],
+    faq: [
+      { q: "How fast can it be live?", a: "14 days from kickoff to live." },
+      { q: "What if the AI says something wrong?", a: "You approve the AI's voice in week 1. We monitor and refine weekly." },
+      { q: "Does it work with my CRM?", a: "Yes — HubSpot, Salesforce, Pipedrive, and 30+ others." },
+    ],
+    cta: { headline: "Ready to never miss a lead?", cta: "Book a 15-min demo" },
+    seo: {
+      title: "AI Website for Local Service Businesses | Acme AI Studios",
+      description: "24/7 AI lead-capture websites for dentists, real estate agents, and local service businesses. Set up in 14 days.",
+    },
+    createdAt: "2026-06-20T10:00:00Z",
+  },
+];
+
+// ─── Growth Command Center metrics ────────────────────────
+
+export interface GrowthMetric {
+  id: string;
+  userId: string;
+  date: string; // ISO date
+  mrr: number;
+  newCustomers: number;
+  churned: number;
+  newLeads: number;
+  trials: number;
+  paid: number;
+}
+
+export interface GrowthChannel {
+  id: string;
+  userId: string;
+  name: string;
+  spend: number;
+  leads: number;
+  customers: number;
+  revenue: number;
+  trend: number; // pct
+}
+
+export interface GrowthExperiment {
+  id: string;
+  userId: string;
+  name: string;
+  hypothesis: string;
+  status: "running" | "won" | "lost" | "draft";
+  startedAt: string;
+  metric: string;
+  baseline: number;
+  current: number;
+  lift: number; // pct
+}
+
+export interface GrowthWeeklyCommentary {
+  id: string;
+  userId: string;
+  weekStart: string;
+  headline: string;
+  body: string;
+  wins: string[];
+  risks: string[];
+  nextWeek: string[];
+  createdAt: string;
+}
+
+export const MOCK_GROWTH_METRICS: GrowthMetric[] = [
+  { id: "gm-1", userId: DEMO_USER.id, date: "2026-06-17", mrr: 8740, newCustomers: 9, churned: 2, newLeads: 64, trials: 22, paid: 9 },
+  { id: "gm-2", userId: DEMO_USER.id, date: "2026-06-18", mrr: 8812, newCustomers: 11, churned: 1, newLeads: 71, trials: 25, paid: 11 },
+  { id: "gm-3", userId: DEMO_USER.id, date: "2026-06-19", mrr: 8903, newCustomers: 7, churned: 0, newLeads: 58, trials: 19, paid: 7 },
+  { id: "gm-4", userId: DEMO_USER.id, date: "2026-06-20", mrr: 8987, newCustomers: 12, churned: 1, newLeads: 82, trials: 28, paid: 12 },
+  { id: "gm-5", userId: DEMO_USER.id, date: "2026-06-21", mrr: 9154, newCustomers: 14, churned: 1, newLeads: 91, trials: 31, paid: 14 },
+  { id: "gm-6", userId: DEMO_USER.id, date: "2026-06-22", mrr: 9278, newCustomers: 10, churned: 2, newLeads: 76, trials: 24, paid: 10 },
+  { id: "gm-7", userId: DEMO_USER.id, date: "2026-06-23", mrr: 9401, newCustomers: 13, churned: 1, newLeads: 88, trials: 27, paid: 13 },
+];
+
+export const MOCK_GROWTH_CHANNELS: GrowthChannel[] = [
+  { id: "gc-1", userId: DEMO_USER.id, name: "Cold email", spend: 200, leads: 412, customers: 47, revenue: 3713, trend: 12 },
+  { id: "gc-2", userId: DEMO_USER.id, name: "LinkedIn outbound", spend: 1200, leads: 142, customers: 18, revenue: 1422, trend: 8 },
+  { id: "gc-3", userId: DEMO_USER.id, name: "SEO / content", spend: 0, leads: 89, customers: 11, revenue: 869, trend: 31 },
+  { id: "gc-4", userId: DEMO_USER.id, name: "Referrals", spend: 0, leads: 23, customers: 9, revenue: 711, trend: 18 },
+  { id: "gc-5", userId: DEMO_USER.id, name: "Paid ads (Meta)", spend: 800, leads: 64, customers: 4, revenue: 316, trend: -15 },
+];
+
+export const MOCK_GROWTH_EXPERIMENTS: GrowthExperiment[] = [
+  { id: "ge-1", userId: DEMO_USER.id, name: "Pricing — $49 starter vs $29", hypothesis: "Lowering Starter to $29 will 2x trials without hurting paid conversion.", status: "running", startedAt: "2026-06-10", metric: "Trial signups / week", baseline: 95, current: 162, lift: 70 },
+  { id: "ge-2", userId: DEMO_USER.id, name: "Landing — new headline", hypothesis: "Specific outcome headline ('Book more jobs in 14 days') beats generic ('AI website').", status: "won", startedAt: "2026-05-25", metric: "Demo booking rate", baseline: 2.1, current: 3.4, lift: 62 },
+  { id: "ge-3", userId: DEMO_USER.id, name: "Cold email — Tuesday 9am send", hypothesis: "Tuesday 9am will outperform Mon/Wed by 15% on reply rate.", status: "lost", startedAt: "2026-05-12", metric: "Reply rate", baseline: 4.2, current: 3.9, lift: -7 },
+  { id: "ge-4", userId: DEMO_USER.id, name: "Onboarding — live setup call", hypothesis: "Adding a 15-min live setup call will lift Day-7 retention by 20%.", status: "running", startedAt: "2026-06-15", metric: "Day-7 retention", baseline: 64, current: 71, lift: 11 },
+];
+
+export const MOCK_GROWTH_COMMENTARY: GrowthWeeklyCommentary[] = [
+  {
+    id: "gc-1-c",
+    userId: DEMO_USER.id,
+    weekStart: "2026-06-17",
+    headline: "Best week of the quarter — MRR up 8%, paid conversions up 23%.",
+    body: "Cold email continues to be your #1 channel by ROI. LinkedIn outbound is paying off as you cross 10 demos booked. Paid Meta ads are still negative ROI — I'd cut spend by 50% and double down on SEO. The pricing experiment is the big one to watch: we're 70% up on trials with no degradation on paid conversion yet.",
+    wins: [
+      "MRR crossed $9.4k — 8% week-over-week",
+      "SEO traffic up 31% — last month's content is compounding",
+      "Landing page test won with 62% lift on demo booking",
+    ],
+    risks: [
+      "Paid Meta ads at -15% trend — burning $800/mo with $316 return",
+      "Two churns from a 'too expensive' cohort — pricing test should fix",
+    ],
+    nextWeek: [
+      "Double SEO content output (4 posts → 6 posts)",
+      "Cut Meta ad spend by 50%, test new creative with smaller budget",
+      "Add 100 more cold email prospects to the active sequence",
+    ],
+    createdAt: "2026-06-23T09:00:00Z",
+  },
+];
+
+// ─── Launch Plan items (7-day launch) ──────────────────────
+// Already covered by MOCK_GROWTH_ROADMAP with kind=launch_7.
+// The /launch page can show the same data with a focus on day-by-day execution.
+
