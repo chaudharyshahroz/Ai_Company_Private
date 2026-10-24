@@ -1,4 +1,4 @@
-# Reklu — Your AI Company. Always Working.
+#Your AI Company. Always Working.
 
 > Hire AI agents that research markets, write content, chase leads, and manage operations — 24/7, without salaries, sick days, or Slack.
 
